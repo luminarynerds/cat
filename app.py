@@ -152,6 +152,7 @@ def _inject_globals():
     return {
         "filename": get_filename(),
         "is_demo": get_is_demo(),
+        "now": datetime.now,
     }
 
 

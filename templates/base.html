@@ -61,6 +61,13 @@
     </aside>
 
     <main class="main-content">
+        {% if is_demo %}
+        <div class="demo-banner">
+            <span class="demo-badge">DEMO</span>
+            You are exploring with sample data.
+            <a href="{{ url_for('upload') }}">Upload your own catalog</a> to analyze your library.
+        </div>
+        {% endif %}
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -72,8 +79,8 @@
         {% block content %}{% endblock %}
 
         <footer class="site-footer">
-            Powered by <a href="https://unhingedlibrarian.com" target="_blank" rel="noopener">The Unhinged Librarian</a> &amp; <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a>
-            <br>Inspired by <a href="https://www.reddit.com/r/librarians/comments/1rgdjzc/software_recommendation_for_collection_development/" target="_blank" rel="noopener">r/librarians</a>
+            &copy; {{ now().year }} <a href="https://unhingedlibrarian.com" target="_blank" rel="noopener">The Unhinged Librarian</a>. MIT License.
+            <br>Built with <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a> | Inspired by <a href="https://www.reddit.com/r/librarians/comments/1rgdjzc/software_recommendation_for_collection_development/" target="_blank" rel="noopener">r/librarians</a>
         </footer>
     </main>
 </div>
