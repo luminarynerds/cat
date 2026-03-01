@@ -373,7 +373,7 @@ def weeding():
     candidates = weeding_candidates(df, age_thresh, circ_thresh)
     return render_template(
         "weeding.html",
-        candidates=candidates.head(200).to_dict("records"),
+        candidates=candidates.head(200).fillna("").to_dict("records"),
         total_candidates=len(candidates),
         total_items=len(df),
         age_threshold=age_thresh,
