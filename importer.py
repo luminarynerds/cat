@@ -238,6 +238,21 @@ DIGITAL_FORMATS = {
 }
 
 
+def _derive_audience(row) -> str:
+    """Derive audience from collection or location fields."""
+    for field in ["collection", "location"]:
+        val = str(row.get(field, "")).lower()
+        if not val or val == "nan":
+            continue
+        if any(kw in val for kw in ["juvenile", "children", "kids", "j ", "juv"]):
+            return "Juvenile"
+        if any(kw in val for kw in ["ya", "young adult", "teen"]):
+            return "YA"
+        if "adult" in val:
+            return "Adult"
+    return "Unknown"
+
+
 def import_catalog(filepath: str) -> pd.DataFrame:
     """Full pipeline: load, normalize, type-coerce, and enrich catalog data."""
     df = load_file(filepath)
@@ -251,4 +266,5 @@ def import_catalog(filepath: str) -> pd.DataFrame:
         .str.lower()
         .isin(DIGITAL_FORMATS)
     )
+    df["audience"] = df.apply(_derive_audience, axis=1)
     return df
