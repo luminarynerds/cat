@@ -55,9 +55,17 @@
             </p>
             <input type="file" name="file" accept=".csv,.xlsx,.xls">
             <br><br>
-            <button type="submit" class="btn">Upload &amp; Analyze</button>
+            <button type="submit" class="btn" id="upload-btn">Upload &amp; Analyze</button>
         </div>
     </form>
+    <script>
+    document.querySelector('form[enctype]').addEventListener('submit', function() {
+        var btn = document.getElementById('upload-btn');
+        btn.disabled = true;
+        btn.textContent = 'Analyzing\u2026 please wait';
+        btn.style.opacity = '0.7';
+    });
+    </script>
 </div>
 
 <div class="card">

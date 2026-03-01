@@ -170,6 +170,7 @@ def report_availability(df: pd.DataFrame) -> list[dict]:
             "available": bool(df["subject"].notna().any()),
         },
     ]
+    reports.sort(key=lambda r: (not r["available"], r["name"]))
     return reports
 
 

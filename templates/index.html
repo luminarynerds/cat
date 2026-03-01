@@ -110,7 +110,7 @@
         <div class="report-grid">
             {% for r in reports %}
             <a href="{{ url_for(r.url) }}" class="report-link {{ 'available' if r.available else 'unavailable' }}">
-                <span class="report-dot {{ 'green' if r.available else 'gray' }}"></span>
+                <span class="report-status {{ 'ready' if r.available else 'not-ready' }}">{{ 'Ready' if r.available else 'N/A' }}</span>
                 <span class="report-name">{{ r.name }}</span>
                 {% if not r.available %}
                 <span class="report-missing">Needs: {{ r.requires }}</span>

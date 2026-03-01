@@ -40,10 +40,16 @@ document.addEventListener('click', function(e) {
                 cell.textContent = '$' + parseFloat(val).toFixed(2);
             } else {
                 cell.textContent = original ? '$' + parseFloat(original).toFixed(2) : '';
+                cell.style.outline = '2px solid #e53e3e';
+                cell.title = 'Save failed - please try again';
+                setTimeout(function() { cell.style.outline = ''; cell.title = ''; }, 3000);
             }
         })
         .catch(function() {
             cell.textContent = original ? '$' + parseFloat(original).toFixed(2) : '';
+            cell.style.outline = '2px solid #e53e3e';
+            cell.title = 'Save failed - please try again';
+            setTimeout(function() { cell.style.outline = ''; cell.title = ''; }, 3000);
         });
     }
 
