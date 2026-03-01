@@ -168,35 +168,6 @@ def _apply_audience_filter(df: pd.DataFrame) -> tuple[pd.DataFrame, str | None]:
     return df, None
 
 
-def _last_upload_path() -> str:
-    sid = session.get("sid", "default")
-    return os.path.join(UPLOAD_DIR, f".last_upload_{sid}.json")
-
-
-def _save_last_upload(filename: str, row_count: int) -> None:
-    meta = {
-        "filename": filename,
-        "uploaded_at": datetime.now().isoformat(),
-        "row_count": row_count,
-    }
-    with open(_last_upload_path(), "w") as f:
-        json.dump(meta, f)
-
-
-def _check_last_upload() -> dict | None:
-    path = _last_upload_path()
-    if not os.path.exists(path):
-        return None
-    try:
-        with open(path) as f:
-            meta = json.load(f)
-        filepath = os.path.join(UPLOAD_DIR, meta["filename"])
-        if not os.path.exists(filepath):
-            return None
-        return meta
-    except (json.JSONDecodeError, KeyError):
-        return None
-
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -212,11 +183,9 @@ def index():
         df, audience_filter = _apply_audience_filter(df)
         summary = collection_summary(df)
         reports = report_availability(df)
-    last_upload = _check_last_upload() if df is None else None
     return render_template(
         "index.html",
         summary=summary,
-        last_upload=last_upload,
         audience_filter=audience_filter,
         data_quality=get_data_quality(),
         reports=reports,
@@ -250,27 +219,6 @@ def executive_summary():
         now=datetime.now().strftime("%B %d, %Y"),
     )
 
-
-@app.route("/reload", methods=["POST"])
-def reload_last():
-    meta = _check_last_upload()
-    if meta is None:
-        flash("No previous upload found.", "error")
-        return redirect(url_for("upload"))
-    filepath = os.path.join(UPLOAD_DIR, meta["filename"])
-    try:
-        df = import_catalog(filepath)
-        _set_session("df", df)
-        _set_session("filename", meta["filename"])
-        _set_session("data_quality", data_quality_check(df))
-        _set_session("is_demo", False)
-        flash(
-            f"Reloaded {len(df)} items from {meta['filename']}.",
-            "success",
-        )
-    except Exception as e:
-        flash(f"Error reloading file: {e}", "error")
-    return redirect(url_for("index"))
 
 
 @app.route("/load-demo", methods=["POST"])
@@ -326,9 +274,7 @@ def upload():
             flash("Unsupported file type. Please upload a CSV or Excel file.", "error")
             return redirect(url_for("upload"))
 
-        sid = session.get("sid", "default")
-        safe_name = f"{sid}_{file.filename}"
-        filepath = os.path.join(UPLOAD_DIR, safe_name)
+        filepath = os.path.join(UPLOAD_DIR, file.filename)
         file.save(filepath)
 
         try:
@@ -336,7 +282,6 @@ def upload():
             _set_session("df", df)
             _set_session("filename", file.filename)
             _set_session("is_demo", False)
-            _save_last_upload(safe_name, len(df))
             dq = data_quality_check(df)
             _set_session("data_quality", dq)
             flash(
@@ -349,6 +294,9 @@ def upload():
         except Exception as e:
             flash(f"Error importing file: {e}", "error")
             return redirect(url_for("upload"))
+        finally:
+            if os.path.exists(filepath):
+                os.remove(filepath)
 
         return redirect(url_for("index"))
 
