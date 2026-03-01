@@ -81,6 +81,18 @@
 </div>
 
 {% else %}
+
+{% if last_upload %}
+<div class="help-box" style="border-left: 4px solid var(--accent, var(--primary));">
+    <strong>Welcome back!</strong> Your last dataset
+    (<strong>{{ last_upload.filename }}</strong>, {{ "{:,}".format(last_upload.row_count) }} items)
+    is still available.
+    <form method="POST" action="{{ url_for('reload_last') }}" style="display: inline;">
+        <button type="submit" class="btn" style="margin-left: 8px; padding: 4px 12px; font-size: 13px;">Reload it</button>
+    </form>
+</div>
+{% endif %}
+
 <div class="empty-state">
     <div class="icon">&#128218;</div>
     <h3>No data loaded yet</h3>

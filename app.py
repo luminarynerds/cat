@@ -78,11 +78,33 @@ def index():
     summary = None
     if df is not None:
         summary = collection_summary(df)
+    last_upload = _check_last_upload() if df is None else None
     return render_template(
         "index.html",
         summary=summary,
         filename=_current_filename,
+        last_upload=last_upload,
     )
+
+
+@app.route("/reload", methods=["POST"])
+def reload_last():
+    global _current_df, _current_filename
+    meta = _check_last_upload()
+    if meta is None:
+        flash("No previous upload found.", "error")
+        return redirect(url_for("upload"))
+    filepath = os.path.join(UPLOAD_DIR, meta["filename"])
+    try:
+        _current_df = import_catalog(filepath)
+        _current_filename = meta["filename"]
+        flash(
+            f"Reloaded {len(_current_df)} items from {meta['filename']}.",
+            "success",
+        )
+    except Exception as e:
+        flash(f"Error reloading file: {e}", "error")
+    return redirect(url_for("index"))
 
 
 @app.route("/upload", methods=["GET", "POST"])
