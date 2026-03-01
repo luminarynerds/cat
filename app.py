@@ -14,6 +14,7 @@ import pandas as pd
 from importer import import_catalog, LC_CLASS_LABELS
 from analyzer import (
     collection_summary,
+    data_quality_check,
     age_distribution,
     subject_balance,
     dewey_subject_balance,
@@ -40,6 +41,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # In-memory store for the current dataset (local single-user app).
 _current_df: pd.DataFrame | None = None
 _current_filename: str | None = None
+_data_quality: dict | None = None
 
 
 def get_df() -> pd.DataFrame | None:
@@ -101,12 +103,13 @@ def index():
         filename=_current_filename,
         last_upload=last_upload,
         audience_filter=audience_filter,
+        data_quality=_data_quality,
     )
 
 
 @app.route("/reload", methods=["POST"])
 def reload_last():
-    global _current_df, _current_filename
+    global _current_df, _current_filename, _data_quality
     meta = _check_last_upload()
     if meta is None:
         flash("No previous upload found.", "error")
@@ -115,6 +118,7 @@ def reload_last():
     try:
         _current_df = import_catalog(filepath)
         _current_filename = meta["filename"]
+        _data_quality = data_quality_check(_current_df)
         flash(
             f"Reloaded {len(_current_df)} items from {meta['filename']}.",
             "success",
@@ -148,7 +152,7 @@ def edit_item():
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
-    global _current_df, _current_filename
+    global _current_df, _current_filename, _data_quality
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -168,6 +172,7 @@ def upload():
             _current_df = import_catalog(filepath)
             _current_filename = file.filename
             _save_last_upload(file.filename, len(_current_df))
+            _data_quality = data_quality_check(_current_df)
             flash(
                 f"Imported {len(_current_df)} items from {file.filename}.",
                 "success",

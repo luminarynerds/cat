@@ -87,6 +87,21 @@
     <button type="button" class="dismiss-btn" onclick="this.parentElement.style.display='none';sessionStorage.setItem('hidePersistenceWarning','1')" aria-label="Dismiss">&times;</button>
 </div>
 
+{% if data_quality and data_quality.has_issues %}
+<div class="card" style="border-left: 4px solid var(--amber-500, #f59e0b); margin-bottom: 1.5rem;">
+    <h3 style="margin-top: 0;">Data Quality Notes</h3>
+    <p style="color: var(--gray-600); font-size: 0.9rem;">
+        These issues were found in your uploaded data. Items are still included in reports,
+        but some results may be affected.
+    </p>
+    <ul style="margin: 0.5rem 0; padding-left: 1.25rem;">
+        {% for issue in data_quality.issues %}
+        <li style="margin-bottom: 0.35rem;">{{ issue }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="stat-grid">
     <div class="card" style="grid-column: 1 / -1;">
         <h3>Where to Start</h3>

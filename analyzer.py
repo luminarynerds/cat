@@ -44,6 +44,50 @@ def collection_summary(df: pd.DataFrame) -> dict:
     }
 
 
+def data_quality_check(df: pd.DataFrame) -> dict:
+    """Check for common data quality issues after import."""
+    current_year = datetime.now().year
+    issues = []
+
+    # Future pub years
+    if df["pub_year"].notna().any():
+        future = int((df["pub_year"] > current_year).sum())
+        if future > 0:
+            issues.append(f"{future} items have future publication years (after {current_year})")
+
+    # Missing call numbers
+    missing_cn = int(df["call_number"].isna().sum())
+    total = len(df)
+    if missing_cn > 0:
+        pct = round(missing_cn / total * 100, 1)
+        issues.append(f"{missing_cn} items ({pct}%) have no call number")
+
+    # Missing checkouts
+    if "checkouts" in df.columns:
+        missing_circ = int(df["checkouts"].isna().sum())
+        if missing_circ > 0:
+            pct = round(missing_circ / total * 100, 1)
+            issues.append(f"{missing_circ} items ({pct}%) have no checkout data")
+
+    # No pub year
+    missing_year = int(df["pub_year"].isna().sum())
+    if missing_year > 0:
+        pct = round(missing_year / total * 100, 1)
+        issues.append(f"{missing_year} items ({pct}%) have no publication year")
+
+    # Negative checkouts
+    if "checkouts" in df.columns and df["checkouts"].notna().any():
+        neg = int((df["checkouts"] < 0).sum())
+        if neg > 0:
+            issues.append(f"{neg} items have negative checkout counts")
+
+    return {
+        "total_items": total,
+        "issues": issues,
+        "has_issues": len(issues) > 0,
+    }
+
+
 def age_distribution(df: pd.DataFrame) -> list[dict]:
     """Break down collection by publication decade."""
     if df["pub_year"].isna().all():
