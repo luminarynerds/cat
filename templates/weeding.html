@@ -71,7 +71,7 @@
                 <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
                 <td>{{ item.age | int }} yrs</td>
                 <td>{{ item.checkouts | int if item.checkouts else 0 }}</td>
-                <td>{{ "${:,.2f}".format(item.price) if item.price else "" }}</td>
+                <td class="editable-price" data-idx="{{ loop.index0 }}" data-field="price" style="cursor: pointer;" title="Click to edit">{{ "${:,.2f}".format(item.price) if item.price else "" }}</td>
                 <td>{{ "${:,.2f}".format(item.cost_per_circ) if item.cost_per_circ else "" }}</td>
                 <td>{{ item.format }}</td>
             </tr>

@@ -108,6 +108,28 @@ def reload_last():
     return redirect(url_for("index"))
 
 
+@app.route("/edit-item", methods=["POST"])
+def edit_item():
+    global _current_df
+    if _current_df is None:
+        return {"ok": False, "error": "No data loaded"}, 400
+    data = request.get_json()
+    if not data:
+        return {"ok": False, "error": "No data"}, 400
+    idx = data.get("index")
+    field = data.get("field")
+    value = data.get("value")
+    if field != "price":
+        return {"ok": False, "error": "Only price is editable"}, 400
+    if idx is None or idx < 0 or idx >= len(_current_df):
+        return {"ok": False, "error": "Invalid index"}, 400
+    try:
+        _current_df.at[idx, "price"] = float(value) if value is not None else pd.NA
+        return {"ok": True}
+    except (ValueError, TypeError) as e:
+        return {"ok": False, "error": str(e)}, 400
+
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     global _current_df, _current_filename
