@@ -600,6 +600,8 @@ tbody tr:hover {
         margin-left: 0;
         padding: 1rem;
         padding-top: 3.5rem;
+        max-width: 100%;
+        overflow-wrap: break-word;
     }
 
     .stat-grid {
@@ -615,13 +617,18 @@ tbody tr:hover {
     .card { padding: 0.75rem; }
     table { font-size: 0.85rem; }
     th, td { padding: 0.35rem 0.5rem; }
+    .help-toggle { float: none; display: block; margin: 0 0 0.5rem auto; }
+    .help-box { overflow-wrap: break-word; word-wrap: break-word; }
 }
 
 @media (pointer: coarse) {
-    nav a, .btn-export, .hamburger, button, select, input[type="file"] {
+    nav a, .btn-export, .hamburger, button, input[type="file"] {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
+    }
+    select {
+        min-height: 44px;
     }
 }
 
