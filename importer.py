@@ -202,6 +202,79 @@ def extract_lc_class(call_number: str) -> str | None:
     return None
 
 
+def extract_classification(call_number: str) -> dict:
+    """Extract classification system, LC class, and Dewey fields from a call number.
+
+    Returns a dict with:
+        classification_system: "LC", "Dewey", or None
+        lc_class: LC letter(s) or None
+        dewey_class: 3-digit Dewey string (e.g. "512") or None
+        dewey_tens: tens grouping (e.g. "510") or None
+    """
+    if pd.isna(call_number):
+        return {"classification_system": None, "lc_class": None,
+                "dewey_class": None, "dewey_tens": None}
+    s = str(call_number).strip()
+    if not s:
+        return {"classification_system": None, "lc_class": None,
+                "dewey_class": None, "dewey_tens": None}
+
+    # LC-style: starts with 1-3 uppercase letters followed by digit
+    if s[0].isalpha() and len(s) > 1:
+        letters = ""
+        for ch in s:
+            if ch.isalpha():
+                letters += ch.upper()
+            else:
+                break
+        if letters and len(s) > len(letters) and s[len(letters)].isdigit():
+            return {"classification_system": "LC", "lc_class": letters,
+                    "dewey_class": None, "dewey_tens": None}
+
+    # Dewey-style: starts with digits
+    if s[0].isdigit():
+        digits = ""
+        for ch in s:
+            if ch.isdigit():
+                digits += ch
+            elif ch in (".", " "):
+                break
+            else:
+                break
+        if len(digits) >= 3:
+            dewey_class = digits[:3]
+            dewey_tens = digits[:2] + "0"
+            dewey_to_broad = {
+                "0": "Z", "1": "B", "2": "BL", "3": "H", "4": "P",
+                "5": "Q", "6": "T", "7": "N", "8": "P", "9": "D",
+            }
+            lc_class = dewey_to_broad.get(digits[0])
+            return {"classification_system": "Dewey", "lc_class": lc_class,
+                    "dewey_class": dewey_class, "dewey_tens": dewey_tens}
+        elif len(digits) >= 1:
+            dewey_to_broad = {
+                "0": "Z", "1": "B", "2": "BL", "3": "H", "4": "P",
+                "5": "Q", "6": "T", "7": "N", "8": "P", "9": "D",
+            }
+            return {"classification_system": "Dewey", "lc_class": dewey_to_broad.get(digits[0]),
+                    "dewey_class": None, "dewey_tens": None}
+
+    # Fallback: try original LC extraction
+    if s[0].isalpha():
+        letters = ""
+        for ch in s:
+            if ch.isalpha():
+                letters += ch.upper()
+            else:
+                break
+        if letters:
+            return {"classification_system": "LC", "lc_class": letters,
+                    "dewey_class": None, "dewey_tens": None}
+
+    return {"classification_system": None, "lc_class": None,
+            "dewey_class": None, "dewey_tens": None}
+
+
 # Human-readable LC class labels
 LC_CLASS_LABELS = {
     "A": "General Works",
@@ -258,7 +331,13 @@ def import_catalog(filepath: str) -> pd.DataFrame:
     df = load_file(filepath)
     df = normalize_columns(df)
     df = coerce_types(df)
-    df["lc_class"] = df["call_number"].apply(extract_lc_class)
+    # Extract classification system and all class fields
+    classification = df["call_number"].apply(extract_classification)
+    class_df = pd.DataFrame(classification.tolist(), index=df.index)
+    df["classification_system"] = class_df["classification_system"]
+    df["lc_class"] = class_df["lc_class"]
+    df["dewey_class"] = class_df["dewey_class"]
+    df["dewey_tens"] = class_df["dewey_tens"]
     df["is_digital"] = (
         df["format"]
         .fillna("")
