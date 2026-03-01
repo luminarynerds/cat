@@ -176,6 +176,33 @@ def format_breakdown(df: pd.DataFrame) -> list[dict]:
     return grouped.sort_values("count", ascending=False).to_dict("records")
 
 
+def digital_physical_split(df: pd.DataFrame) -> dict:
+    """Summarize digital vs physical items."""
+    if "is_digital" not in df.columns:
+        return {"has_data": False}
+
+    total = len(df)
+    digital = int(df["is_digital"].sum())
+    physical = total - digital
+
+    result = {
+        "has_data": True,
+        "digital_count": digital,
+        "digital_pct": round(digital / total * 100, 1) if total else 0,
+        "physical_count": physical,
+        "physical_pct": round(physical / total * 100, 1) if total else 0,
+    }
+
+    # Avg checkouts per group
+    if df["checkouts"].notna().any():
+        dig_df = df[df["is_digital"]]
+        phy_df = df[~df["is_digital"]]
+        result["digital_avg_circ"] = round(float(dig_df["checkouts"].mean()), 1) if len(dig_df) else 0
+        result["physical_avg_circ"] = round(float(phy_df["checkouts"].mean()), 1) if len(phy_df) else 0
+
+    return result
+
+
 def circulation_analysis(df: pd.DataFrame) -> dict:
     """Circulation patterns and usage analysis."""
     result = {}

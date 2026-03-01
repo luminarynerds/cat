@@ -21,6 +21,21 @@
     <a href="{{ url_for('export_formats') }}" class="btn-export">Download CSV</a>
 </div>
 
+{% if digital.has_data and digital.digital_count > 0 %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Physical Items</div>
+        <div class="value">{{ "{:,}".format(digital.physical_count) }}</div>
+        <div class="detail">{{ digital.physical_pct }}% of collection{% if digital.physical_avg_circ is defined %} &middot; {{ digital.physical_avg_circ }} avg checkouts{% endif %}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Digital Items</div>
+        <div class="value">{{ "{:,}".format(digital.digital_count) }}</div>
+        <div class="detail">{{ digital.digital_pct }}% of collection{% if digital.digital_avg_circ is defined %} &middot; {{ digital.digital_avg_circ }} avg checkouts{% endif %}</div>
+    </div>
+</div>
+{% endif %}
+
 <div class="card">
     <h3>Format Distribution</h3>
     <div class="bar-chart">

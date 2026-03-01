@@ -18,6 +18,7 @@ from analyzer import (
     subject_balance,
     find_gaps,
     format_breakdown,
+    digital_physical_split,
     circulation_analysis,
     weeding_candidates,
     dormant_items,
@@ -230,9 +231,11 @@ def formats():
         return redirect(url_for("upload"))
 
     data = format_breakdown(df)
+    digital = digital_physical_split(df)
     return render_template(
         "formats.html",
         formats=data,
+        digital=digital,
         chart_data=json.dumps(data),
         filename=_current_filename,
     )
