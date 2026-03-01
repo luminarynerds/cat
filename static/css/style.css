@@ -405,6 +405,20 @@ tbody tr:hover {
     margin-bottom: 4px;
 }
 
+.help-toggle {
+    background: none;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: var(--gray-600);
+    float: right;
+    margin: -0.25rem 0 0.5rem 0.5rem;
+}
+.help-toggle:hover { background: var(--gray-100); }
+.help-body.collapsed { display: none; }
+
 /* Step indicator for getting-started / upload walkthrough */
 .steps {
     display: flex;
@@ -505,6 +519,85 @@ tbody tr:hover {
 .mustie-T { background: #e2e8f0; color: #4a5568; }
 .mustie-I { background: #bee3f8; color: #2a4365; }
 .mustie-E { background: #e9d8fd; color: #553c9a; }
+
+/* ── Responsive ─────────────────────────────────── */
+
+.hamburger {
+    display: none;
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1100;
+    background: var(--gray-800);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 0.65rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+}
+.sidebar-overlay.active { display: block; }
+
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 768px) {
+    .hamburger { display: block; }
+
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.25s ease;
+        width: 240px;
+    }
+    .sidebar.open { left: 0; }
+
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 3.5rem;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-grid { grid-template-columns: 1fr; }
+    .stat-card { padding: 0.75rem; }
+    .page-header h2 { font-size: 1.25rem; }
+    .card { padding: 0.75rem; }
+    table { font-size: 0.85rem; }
+    th, td { padding: 0.35rem 0.5rem; }
+}
+
+@media (pointer: coarse) {
+    nav a, .btn-export, .hamburger, button, select, input[type="file"] {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
 
 /* Print-friendly: hide sidebar, nav, export buttons when printing */
 @media print {
