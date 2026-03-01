@@ -8,18 +8,12 @@
 </div>
 
 <div class="help-box">
-    <strong>How this works:</strong>
-    This report flags two kinds of duplicates:
-    <ul>
-        <li><strong>ISBN matches:</strong> Items sharing the exact same ISBN — these are almost
-            certainly the same edition. Multiple copies may be intentional (high-demand titles)
-            or accidental.</li>
-        <li><strong>Title + Author matches:</strong> Items with the same title and author but
-            possibly different ISBNs. These could be different editions, different formats
-            (hardcover vs. paperback), or unintentional duplicates.</li>
-    </ul>
-    Review each group to decide whether extra copies are warranted by demand or should
-    be consolidated.
+    <strong>What does this page show?</strong>
+    Items that appear more than once in your collection, matched by title. Some duplicates
+    are intentional (popular items with multiple copies), but others may be accidental.
+    <br><br>
+    <strong>Why this matters:</strong> Accidental duplicates waste budget and shelf space.
+    Intentional duplicates of high-demand items are good collection management.
 </div>
 
 {% if dupes.total_isbn_dupes == 0 and dupes.total_ta_dupes == 0 %}

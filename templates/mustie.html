@@ -9,29 +9,20 @@
 {% include "partials/audience_filter.html" %}
 
 <div class="help-box">
-    <strong>What is MUSTIE?</strong>
-    MUSTIE is a framework from the CREW method (Continuous Review, Evaluation, and Weeding)
-    used by libraries nationwide. Each letter flags a different reason an item might need
-    to be withdrawn:
-    <ul>
-        <li><strong>M &mdash; Misleading:</strong> Contains outdated or inaccurate information.
-            Flagged automatically for items in fast-changing subjects (Science, Technology,
-            Medicine, Law) that exceed their recommended age limit.</li>
-        <li><strong>U &mdash; Ugly:</strong> Physically worn or damaged. Approximated here by
-            flagging old items with high circulation (likely handled many times).</li>
-        <li><strong>S &mdash; Superseded:</strong> A newer edition may exist. Flagged when your
-            catalog has another item with the same title and author but a more recent
-            publication year.</li>
-        <li><strong>T &mdash; Trivial:</strong> Of no discernible merit. Cannot be detected
-            from catalog data &mdash; requires manual review.</li>
-        <li><strong>I &mdash; Irrelevant:</strong> Doesn't match community needs. Flagged for
-            items with very low or zero checkouts.</li>
-        <li><strong>E &mdash; Elsewhere:</strong> Readily available from other sources (ILL,
-            digital, etc.). Cannot be detected from catalog data &mdash; requires manual review.</li>
-    </ul>
-    The age thresholds vary by subject area based on CREW guidelines. You can
-    <a href="{{ url_for('mustie_settings') }}"><strong>customize the thresholds</strong></a>
-    to match your library's policy.
+    <strong>What is MUSTIE weeding?</strong>
+    <span class="jargon" data-tip="Misleading, Ugly, Superseded, Trivial, Irrelevant, Elsewhere - criteria for removing items">MUSTIE</span>
+    is a checklist that helps you decide whether to remove an item from your shelves.
+    Each letter stands for a reason to weed: Misleading (outdated facts), Ugly (worn out),
+    Superseded (newer edition exists), Trivial (no lasting value), Irrelevant (doesn't fit
+    your community), Elsewhere (available from another source).
+    <br><br>
+    The tool flags items that might match these criteria based on age, checkout data,
+    and condition. You make the final call.
+    <br><br>
+    <strong>Why this matters:</strong> Regular
+    <span class="jargon" data-tip="Removing outdated or unused items from shelves">weeding</span>
+    keeps your collection fresh, makes browsing easier, and frees up space and budget
+    for new material.
 </div>
 
 {% if summary.total > 0 %}
