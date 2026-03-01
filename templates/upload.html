@@ -22,6 +22,18 @@
 </div>
 
 <div class="card">
+    <h3>Templates</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
+        Not sure if your file will work? Download a template to see the expected format,
+        or compare it against the example file.
+    </p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{{ url_for('download_template', name='template_blank.csv') }}" class="btn-export">Download Blank Template</a>
+        <a href="{{ url_for('download_template', name='template_example.csv') }}" class="btn-export">Download Example File</a>
+    </div>
+</div>
+
+<div class="card">
     <h3>Upload File</h3>
     <form method="POST" enctype="multipart/form-data">
         <div class="upload-area">
