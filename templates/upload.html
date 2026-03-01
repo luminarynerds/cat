@@ -9,15 +9,27 @@
 
 <div class="help-box">
     <strong>How do I get this file?</strong>
-    In your ILS (Sierra, Polaris, Koha, Evergreen, etc.), go to the Reports or
-    Create Lists area and pull a list of all items at your branch. Then export/download
-    that list as a CSV or Excel file. If you're not sure how, ask your consortium's
-    system administrator &mdash; they can usually generate one for you.
+    Open your
+    <span class="jargon" data-tip="Integrated Library System - the software your library uses to manage books and checkouts">ILS</span>
+    (Sierra, Polaris, Koha, Evergreen, etc.). Go to Reports or Create Lists. Pull a list
+    of all items at your branch. Export it as CSV or Excel.
+    <br><br>
+    Not sure how? Ask your system administrator. They can usually generate one for you.
     <ul>
-        <li>The file should have <strong>one row per item</strong> (or one row per bib record).</li>
-        <li>Include as many columns as possible &mdash; the tool automatically matches them.</li>
-        <li>At minimum, include <strong>Title</strong>, <strong>Call Number</strong>, and <strong>Publication Year</strong>.</li>
-        <li>For circulation reports, also include a <strong>Checkouts</strong> (or Total Circs) column.</li>
+        <li>Your file should have <strong>one row per item</strong>.</li>
+        <li>Include as many columns as possible. The tool matches them automatically.</li>
+        <li>At minimum: <strong>Title</strong>, <strong>Call Number</strong>, and <strong>Publication Year</strong>.</li>
+        <li>For circulation reports, add a <strong>Checkouts</strong> column.</li>
+    </ul>
+</div>
+
+<div class="help-box">
+    <strong>What if my file doesn't work?</strong>
+    <ul>
+        <li><strong>Wrong format?</strong> Save as .csv, .xlsx, or .xls. Other formats are not supported.</li>
+        <li><strong>File too large?</strong> Try splitting into smaller files or removing unnecessary columns.</li>
+        <li><strong>Weird characters?</strong> Save your CSV as UTF-8 encoding. Most spreadsheet apps have this option.</li>
+        <li><strong>Reports look empty?</strong> Check the <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to see which fields were detected.</li>
     </ul>
 </div>
 
