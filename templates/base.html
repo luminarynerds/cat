@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/inline-edit.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/drilldown.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}" defer></script>
 </head>
 <body>
 <div class="app-container">
+    <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+    <div class="sidebar-overlay"></div>
     <aside class="sidebar">
         <div class="sidebar-header">
             <h1>Collection Analyzer</h1>
