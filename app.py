@@ -291,9 +291,8 @@ def mustie_weeding():
         return redirect(url_for("upload"))
 
     thresholds = _custom_thresholds or get_default_thresholds()
-    circ_floor = request.args.get("circ", 2, type=int)
 
-    flagged = apply_mustie(df, thresholds=thresholds, circ_floor=circ_floor)
+    flagged = apply_mustie(df, thresholds=thresholds)
     summary = mustie_summary(flagged)
 
     return render_template(
@@ -303,7 +302,6 @@ def mustie_weeding():
         total_items=len(df),
         summary=summary,
         thresholds=thresholds,
-        circ_floor=circ_floor,
         filename=_current_filename,
     )
 
@@ -354,8 +352,7 @@ def export_mustie():
         return redirect(url_for("upload"))
 
     thresholds = _custom_thresholds or get_default_thresholds()
-    circ_floor = request.args.get("circ", 2, type=int)
-    flagged = apply_mustie(df, thresholds=thresholds, circ_floor=circ_floor)
+    flagged = apply_mustie(df, thresholds=thresholds)
     return _csv_response(
         flagged.fillna("").to_dict("records"),
         "mustie_weeding_candidates.csv",
