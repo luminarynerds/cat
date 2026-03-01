@@ -88,6 +88,76 @@ def data_quality_check(df: pd.DataFrame) -> dict:
     }
 
 
+def generate_recommendations(df: pd.DataFrame, summary: dict, gaps: dict) -> list[dict]:
+    """Generate top 3 actionable recommendations based on collection data."""
+    recs = []
+    current_year = datetime.now().year
+
+    # Check for aging subjects
+    if gaps.get("aging_areas"):
+        worst = gaps["aging_areas"][0]
+        recs.append({
+            "priority": 1,
+            "title": f"Update {worst['label']} collection",
+            "detail": f"The {worst['label']} section has a median publication year of "
+                      f"{int(worst['pub_year'])} ({int(worst['median_age'])} years old). "
+                      f"Consider purchasing newer titles in this area.",
+            "type": "purchase",
+        })
+
+    # Check never-circulated percentage
+    if summary.get("items_never_circulated") is not None and summary["total_items"] > 0:
+        pct = round(summary["items_never_circulated"] / summary["total_items"] * 100, 1)
+        if pct > 20:
+            recs.append({
+                "priority": 2,
+                "title": f"Review {summary['items_never_circulated']:,} never-circulated items",
+                "detail": f"{pct}% of your collection has never been checked out. "
+                          f"Review these items for possible weeding or repositioning.",
+                "type": "weed",
+            })
+
+    # Check for underrepresented subjects
+    if gaps.get("underrepresented_subjects"):
+        count = len(gaps["underrepresented_subjects"])
+        recs.append({
+            "priority": 3,
+            "title": f"Fill gaps in {count} thin subject areas",
+            "detail": f"{count} subject areas each represent less than 3% of your "
+                      f"collection. Review whether your community needs better "
+                      f"coverage in these areas.",
+            "type": "purchase",
+        })
+
+    # Check median age
+    if summary.get("median_age") and summary["median_age"] > 15:
+        recs.append({
+            "priority": 4,
+            "title": "Collection is aging overall",
+            "detail": f"Your median item age is {summary['median_age']} years. "
+                      f"A typical public library aims for 10-12 years. "
+                      f"Consider accelerating weeding and new acquisitions.",
+            "type": "weed",
+        })
+
+    # Check duplicates
+    dupes = find_duplicates(df)
+    if dupes.get("isbn_groups"):
+        dupe_count = len(dupes["isbn_groups"])
+        if dupe_count > 20:
+            recs.append({
+                "priority": 5,
+                "title": f"Investigate {dupe_count} duplicate groups",
+                "detail": f"Found {dupe_count} groups of items sharing the same ISBN. "
+                          f"Some may be intentional copies; others may be accidental.",
+                "type": "review",
+            })
+
+    # Sort by priority and return top 3
+    recs.sort(key=lambda r: r["priority"])
+    return recs[:3]
+
+
 def age_distribution(df: pd.DataFrame) -> list[dict]:
     """Break down collection by publication decade."""
     if df["pub_year"].isna().all():

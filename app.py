@@ -4,6 +4,7 @@ import csv
 import io
 import os
 import json
+from datetime import datetime
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, Response,
@@ -29,6 +30,7 @@ from analyzer import (
     collection_freshness,
     flag_banned_books,
     diversity_audit,
+    generate_recommendations,
 )
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
@@ -104,6 +106,36 @@ def index():
         last_upload=last_upload,
         audience_filter=audience_filter,
         data_quality=_data_quality,
+    )
+
+
+@app.route("/summary")
+def executive_summary():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    summary = collection_summary(df)
+    gap_data = find_gaps(df)
+    recommendations = generate_recommendations(df, summary, gap_data)
+
+    # Classification system
+    class_system = "LC"
+    if "classification_system" in df.columns:
+        lc = int((df["classification_system"] == "LC").sum())
+        dw = int((df["classification_system"] == "Dewey").sum())
+        if dw > lc:
+            class_system = "Dewey"
+
+    return render_template(
+        "summary.html",
+        summary=summary,
+        gaps=gap_data,
+        recommendations=recommendations,
+        class_system=class_system,
+        filename=_current_filename,
+        now=datetime.now().strftime("%B %d, %Y"),
     )
 
 
