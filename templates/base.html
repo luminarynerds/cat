@@ -26,7 +26,8 @@
 
             <div class="section-label">Circulation</div>
             <a href="{{ url_for('circulation') }}" class="{% if request.endpoint == 'circulation' %}active{% endif %}">Usage Analysis</a>
-            <a href="{{ url_for('weeding') }}" class="{% if request.endpoint == 'weeding' %}active{% endif %}">Weeding Candidates</a>
+            <a href="{{ url_for('weeding') }}" class="{% if request.endpoint == 'weeding' %}active{% endif %}">Weeding (Simple)</a>
+            <a href="{{ url_for('mustie_weeding') }}" class="{% if request.endpoint in ('mustie_weeding', 'mustie_settings') %}active{% endif %}">Weeding (MUSTIE)</a>
 
             <div class="section-label">Data</div>
             <a href="{{ url_for('column_mapping') }}" class="{% if request.endpoint == 'column_mapping' %}active{% endif %}">Column Mapping</a>

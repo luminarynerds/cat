@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}MUSTIE Settings — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>MUSTIE Threshold Settings</h2>
+    <p>Customize the age thresholds used to flag items for each subject area</p>
+</div>
+
+<div class="help-box">
+    <strong>How do these thresholds work?</strong>
+    The CREW method recommends different maximum ages for different subject areas.
+    For example, a 10-year-old science book may contain outdated facts, while a
+    15-year-old history book is often still perfectly fine.
+    <br><br>
+    The <strong>Max Age</strong> column below controls when items in each subject area
+    get flagged as <strong>M (Misleading)</strong>. If an item's age exceeds its subject's
+    max age, it gets the M flag. You can raise or lower any threshold to match your
+    library's weeding policy.
+    <br><br>
+    The defaults shown here come from the CREW method guidelines. Click
+    <strong>Save Changes</strong> to apply your custom values, or
+    <strong>Reset to Defaults</strong> to go back to the CREW recommendations.
+</div>
+
+<form method="POST">
+    <div class="card">
+        <h3>Age Thresholds by Subject</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Subject</th>
+                    <th>Max Age (years)</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cls in thresholds | sort %}
+                {% set t = thresholds[cls] %}
+                <tr>
+                    <td><strong>{{ cls }}</strong></td>
+                    <td>{{ t.label }}</td>
+                    <td>
+                        <input type="number" name="age_{{ cls }}"
+                               value="{{ t.max_age }}" min="1" max="100"
+                               style="width: 70px; padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 14px;">
+                    </td>
+                    <td style="font-size: 13px; color: var(--gray-600);">
+                        {% if cls in ['K', 'Q', 'R', 'T', 'Z'] %}
+                        Fast-changing field &mdash; shorter shelf life recommended
+                        {% elif cls in ['D', 'E', 'F', 'M', 'N', 'U', 'V'] %}
+                        Slower-changing &mdash; longer shelf life is typical
+                        {% elif cls == 'P' %}
+                        Literature ages slowly &mdash; classics may stay indefinitely
+                        {% else %}
+                        Standard shelf life
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="submit" class="btn">Save Changes</button>
+        <span style="color: var(--gray-600); font-size: 13px;">or</span>
+    </div>
+</form>
+
+<form method="POST" action="{{ url_for('mustie_reset') }}" style="margin-top: 12px;">
+    <button type="submit" class="btn-export">Reset to CREW Defaults</button>
+</form>
+
+<div style="margin-top: 24px;">
+    <a href="{{ url_for('mustie_weeding') }}">&larr; Back to MUSTIE Results</a>
+</div>
+{% endblock %}

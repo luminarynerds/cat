@@ -20,6 +20,7 @@ from analyzer import (
     circulation_analysis,
     weeding_candidates,
 )
+from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -201,6 +202,88 @@ def weeding():
         age_threshold=age_thresh,
         circ_threshold=circ_thresh,
         filename=_current_filename,
+    )
+
+
+# ---------------------------------------------------------------------------
+# MUSTIE / CREW weeding
+# ---------------------------------------------------------------------------
+
+# Session-scoped custom thresholds (survives across page loads)
+_custom_thresholds: dict[str, dict] | None = None
+
+
+@app.route("/mustie", methods=["GET"])
+def mustie_weeding():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    thresholds = _custom_thresholds or get_default_thresholds()
+    circ_floor = request.args.get("circ", 2, type=int)
+
+    flagged = apply_mustie(df, thresholds=thresholds, circ_floor=circ_floor)
+    summary = mustie_summary(flagged)
+
+    return render_template(
+        "mustie.html",
+        candidates=flagged.head(200).fillna("").to_dict("records"),
+        total_candidates=len(flagged),
+        total_items=len(df),
+        summary=summary,
+        thresholds=thresholds,
+        circ_floor=circ_floor,
+        filename=_current_filename,
+    )
+
+
+@app.route("/mustie/settings", methods=["GET", "POST"])
+def mustie_settings():
+    global _custom_thresholds
+
+    if request.method == "POST":
+        thresholds = get_default_thresholds()
+        for cls in thresholds:
+            age_key = f"age_{cls}"
+            if age_key in request.form:
+                try:
+                    thresholds[cls]["max_age"] = int(request.form[age_key])
+                except ValueError:
+                    pass
+        _custom_thresholds = thresholds
+        flash("MUSTIE thresholds updated.", "success")
+        return redirect(url_for("mustie_weeding"))
+
+    thresholds = _custom_thresholds or get_default_thresholds()
+    return render_template(
+        "mustie_settings.html",
+        thresholds=thresholds,
+        filename=_current_filename,
+    )
+
+
+@app.route("/mustie/reset", methods=["POST"])
+def mustie_reset():
+    global _custom_thresholds
+    _custom_thresholds = None
+    flash("MUSTIE thresholds reset to CREW defaults.", "success")
+    return redirect(url_for("mustie_settings"))
+
+
+@app.route("/export/mustie")
+def export_mustie():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    thresholds = _custom_thresholds or get_default_thresholds()
+    circ_floor = request.args.get("circ", 2, type=int)
+    flagged = apply_mustie(df, thresholds=thresholds, circ_floor=circ_floor)
+    return _csv_response(
+        flagged.fillna("").to_dict("records"),
+        "mustie_weeding_candidates.csv",
     )
 
 

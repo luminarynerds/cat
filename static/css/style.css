@@ -486,6 +486,26 @@ tbody tr:hover {
     background: var(--primary-light);
 }
 
+/* MUSTIE flag badges */
+.mustie-badge {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 22px;
+    margin-right: 2px;
+}
+
+.mustie-M { background: #fed7d7; color: #9b2c2c; }
+.mustie-U { background: #fefcbf; color: #975a16; }
+.mustie-S { background: #c6f6d5; color: #276749; }
+.mustie-T { background: #e2e8f0; color: #4a5568; }
+.mustie-I { background: #bee3f8; color: #2a4365; }
+.mustie-E { background: #e9d8fd; color: #553c9a; }
+
 /* Print-friendly: hide sidebar, nav, export buttons when printing */
 @media print {
     .sidebar { display: none; }

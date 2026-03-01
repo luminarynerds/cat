@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}MUSTIE Weeding — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>MUSTIE Weeding</h2>
+    <p>Weeding candidates evaluated using the CREW/MUSTIE framework</p>
+</div>
+
+<div class="help-box">
+    <strong>What is MUSTIE?</strong>
+    MUSTIE is a framework from the CREW method (Continuous Review, Evaluation, and Weeding)
+    used by libraries nationwide. Each letter flags a different reason an item might need
+    to be withdrawn:
+    <ul>
+        <li><strong>M &mdash; Misleading:</strong> Contains outdated or inaccurate information.
+            Flagged automatically for items in fast-changing subjects (Science, Technology,
+            Medicine, Law) that exceed their recommended age limit.</li>
+        <li><strong>U &mdash; Ugly:</strong> Physically worn or damaged. Approximated here by
+            flagging old items with high circulation (likely handled many times).</li>
+        <li><strong>S &mdash; Superseded:</strong> A newer edition may exist. Flagged when your
+            catalog has another item with the same title and author but a more recent
+            publication year.</li>
+        <li><strong>T &mdash; Trivial:</strong> Of no discernible merit. Cannot be detected
+            from catalog data &mdash; requires manual review.</li>
+        <li><strong>I &mdash; Irrelevant:</strong> Doesn't match community needs. Flagged for
+            items with very low or zero checkouts.</li>
+        <li><strong>E &mdash; Elsewhere:</strong> Readily available from other sources (ILL,
+            digital, etc.). Cannot be detected from catalog data &mdash; requires manual review.</li>
+    </ul>
+    The age thresholds vary by subject area based on CREW guidelines. You can
+    <a href="{{ url_for('mustie_settings') }}"><strong>customize the thresholds</strong></a>
+    to match your library's policy.
+</div>
+
+{% if summary.total > 0 %}
+<div class="export-bar">
+    <a href="{{ url_for('mustie_settings') }}" class="btn-export">Edit Thresholds</a>
+    <a href="{{ url_for('export_mustie', circ=circ_floor) }}" class="btn-export">Download Full List CSV</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Flagged</div>
+        <div class="value">{{ "{:,}".format(summary.total) }}</div>
+        <div class="detail">out of {{ "{:,}".format(total_items) }} items</div>
+    </div>
+    {% for letter, info in summary.by_flag.items() %}
+    {% if info.count > 0 %}
+    <div class="stat-card">
+        <div class="label">{{ letter }} &mdash; {{ info.label.split('(')[0].strip() }}</div>
+        <div class="value">{{ "{:,}".format(info.count) }}</div>
+        <div class="detail">{{ info.label }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% if summary.by_subject %}
+<div class="card">
+    <h3>Flagged Items by Subject Area</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
+        Subjects with the most flagged items may need the most attention. The
+        "Avg Flags" column shows how many MUSTIE criteria each item triggers on
+        average &mdash; higher means more reasons to consider withdrawing.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Flagged Items</th>
+                <th>Avg Flags per Item</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in summary.by_subject %}
+            <tr>
+                <td>{{ s.broad_class }}</td>
+                <td>{{ s.label }}</td>
+                <td>{{ s.count }}</td>
+                <td>{{ s.avg_flags }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Flagged Items</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
+        Sorted by number of flags (most flags first). Items with more flags have
+        more reasons to consider for withdrawal.
+        {% if total_candidates > 200 %}
+        Showing first 200 &mdash; download the CSV for the complete list.
+        {% endif %}
+    </p>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>MUSTIE</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call #</th>
+                <th>Year</th>
+                <th>Age</th>
+                <th>Circ</th>
+                <th>Format</th>
+                <th>Max Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in candidates %}
+            <tr>
+                <td>
+                    {% for letter in item.mustie_flags.split('-') %}
+                    {% if letter %}
+                    <span class="mustie-badge mustie-{{ letter }}">{{ letter }}</span>
+                    {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
+                <td>{{ item.age | int if item.age else "" }}</td>
+                <td>{{ item.checkouts | int if item.checkouts else 0 }}</td>
+                <td>{{ item.format }}</td>
+                <td>{{ item.subject_max_age }} yrs</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    No items were flagged by any MUSTIE criteria with the current thresholds. You can
+    <a href="{{ url_for('mustie_settings') }}">adjust the thresholds</a> or try a lower
+    circulation floor.
+</div>
+{% endif %}
+{% endblock %}
