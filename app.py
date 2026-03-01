@@ -26,6 +26,7 @@ from analyzer import (
     cost_analysis,
     collection_freshness,
     flag_banned_books,
+    diversity_audit,
 )
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
@@ -731,6 +732,44 @@ def export_banned_books():
         export_cols.insert(5, "location")
     cols = [c for c in export_cols if c in matches.columns]
     return _csv_response(matches[cols].fillna("").to_dict("records"), "banned_challenged_books.csv")
+
+
+# ---------------------------------------------------------------------------
+# Diversity Audit
+# ---------------------------------------------------------------------------
+
+@app.route("/diversity")
+def diversity():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
+    result = diversity_audit(df)
+    return render_template(
+        "diversity.html",
+        audit=result,
+        audience_filter=audience_filter,
+        filename=_current_filename,
+    )
+
+
+@app.route("/export/diversity")
+def export_diversity():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    df, _ = _apply_audience_filter(df)
+    result = diversity_audit(df)
+    rows = []
+    for cat in result.get("categories", []):
+        for item in cat.get("items", []):
+            rows.append({**item, "diversity_category": cat["name"]})
+    if not rows:
+        flash("No diversity data to export.", "error")
+        return redirect(url_for("diversity"))
+    return _csv_response(rows, "diversity_audit.csv")
 
 
 if __name__ == "__main__":

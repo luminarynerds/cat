@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Diversity Audit — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Diversity Audit</h2>
+    <p>Representation analysis based on subject headings</p>
+</div>
+
+{% include "partials/audience_filter.html" %}
+
+<div class="help-box">
+    <strong>About this report:</strong>
+    This audit scans your catalog's <strong>subject headings</strong> for keywords related
+    to diverse representation. It is an <em>approximation</em>, not a definitive count.
+    Cataloging practices vary widely, and many books with diverse themes may not have
+    obvious subject headings. We recommend supplementing this with curated lists
+    (e.g., from We Need Diverse Books or your state library).
+    <br><br>
+    This report does <strong>not</strong> guess author demographics from names.
+</div>
+
+{% if audit.has_data %}
+
+<div class="export-bar">
+    <a href="{{ url_for('export_diversity', audience=audience_filter or '') }}" class="btn-export">Download CSV</a>
+</div>
+
+{% if audit.gaps %}
+<div class="card">
+    <h3>Representation Gaps</h3>
+    {% for gap in audit.gaps %}
+    <div style="padding: 6px 12px; margin-bottom: 6px; border-left: 3px solid {% if gap.severity == 'none' %}#fc8181{% elif gap.severity == 'low' %}#ecc94b{% else %}#4299e1{% endif %}; background: var(--gray-50); border-radius: 0 4px 4px 0; font-size: 13px;">
+        {{ gap.message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="stat-grid">
+    {% for cat in audit.categories %}
+    <div class="stat-card">
+        <div class="label">{{ cat.name }}</div>
+        <div class="value">{{ cat.count }}</div>
+        <div class="detail">
+            {{ cat.percentage }}% of collection
+            {% if cat.avg_pub_year %} &middot; avg year {{ cat.avg_pub_year }}{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% for cat in audit.categories %}
+{% if cat.items %}
+<div class="card">
+    <h3>{{ cat.name }}: {{ cat.description }} ({{ cat.count }} items)</h3>
+    {% if cat.by_audience %}
+    <p style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px;">
+        {% for aud, cnt in cat.by_audience.items() %}{{ aud }}: {{ cnt }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Subject</th>
+                <th>Year</th>
+                <th>Format</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cat.items[:20] %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td style="font-size: 12px; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">{{ item.subject }}</td>
+                <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
+                <td>{{ item.format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if cat.count > 20 %}
+    <p style="font-size: 12px; color: var(--gray-600); margin-top: 8px;">Showing 20 of {{ cat.count }}. Download CSV for the full list.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endfor %}
+
+{% else %}
+<div class="alert alert-info">
+    No subject heading data found. The diversity audit requires a <strong>Subject</strong>
+    column in your catalog export.
+</div>
+{% endif %}
+{% endblock %}
