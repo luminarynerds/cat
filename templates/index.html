@@ -4,22 +4,21 @@
 {% block content %}
 <div class="page-header">
     <h2>Dashboard</h2>
-    <p>Overview of your library collection</p>
+    <p>{% if is_demo %}Exploring a sample library collection{% else %}Overview of your library collection{% endif %}</p>
 </div>
 
 {% if summary %}
 
 {% if is_demo %}
-<div class="alert alert-info" style="border-left: 4px solid var(--accent, #6366f1); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-    <span style="font-size: 1.25rem;">&#128161;</span>
-    <span>
-        <strong>You are viewing sample data.</strong>
-        Upload your own catalog to analyze your library's collection.
-        <a href="{{ url_for('upload') }}" style="margin-left: 4px;">Import Data &rarr;</a>
-    </span>
+<div class="help-box" style="border-left: 4px solid #f59e0b;">
+    <strong>You are looking at a sample public library collection.</strong>
+    Click through the reports in the sidebar -- Gaps, Weeding, Subject Balance,
+    MUSTIE scoring, Diversity Audit -- to see what the tool generates from a real catalog export.
+    <br><br>
+    Everything you see here works the same with your own data.
+    <a href="{{ url_for('upload') }}"><strong>Upload your catalog</strong></a> to get your own reports.
 </div>
-{% endif %}
-
+{% else %}
 <div class="help-box">
     <strong>What am I looking at?</strong>
     This is a snapshot of your entire collection. The numbers show how large your collection is,
@@ -28,6 +27,7 @@
     <br><br>
     <strong>Why this matters:</strong> A quick health check before diving into detailed reports.
 </div>
+{% endif %}
 
 <div class="export-bar">
     <a href="{{ url_for('export_full_catalog') }}" class="btn-export">Download Full Catalog CSV</a>
@@ -89,15 +89,13 @@
 </div>
 {% endif %}
 
+{% if not is_demo %}
 <div class="alert alert-info persistence-warning" id="persistence-warning">
-    <strong>Heads up:</strong> Your data is stored in memory only for this session.
-    If you close the browser or restart the app, you will need to reload your file.
-    {% if filename %}
-    The app remembers your last file (<em>{{ filename }}</em>) so you can reload it
-    with one click from this page.
-    {% endif %}
+    <strong>Heads up:</strong> Your data lives in memory for this session only.
+    If you close the tab, you will need to re-upload your file. We never store your data on disk.
     <button type="button" class="dismiss-btn" onclick="this.parentElement.style.display='none';sessionStorage.setItem('hidePersistenceWarning','1')" aria-label="Dismiss">&times;</button>
 </div>
+{% endif %}
 
 {% if data_quality and data_quality.has_issues %}
 <div class="card" style="border-left: 4px solid var(--amber-500, #f59e0b); margin-bottom: 1.5rem;">
@@ -134,19 +132,27 @@
 
 {% else %}
 
-<div class="empty-state">
+<div class="empty-state" style="max-width: 600px; margin: 2rem auto;">
     <div class="icon">&#128218;</div>
-    <h3>No data loaded yet</h3>
-    <p>Upload a CSV or Excel export from your ILS to get started.</p>
-    <p style="margin-top: 8px; font-size: 13px;">
-        First time? Check the <a href="{{ url_for('getting_started') }}"><strong>Getting Started</strong></a>
-        guide for a full walkthrough.
+    <h3>Know your collection before your board asks about it</h3>
+    <p style="font-size: 1rem; line-height: 1.6; color: var(--gray-600, #4a5568);">
+        Export a CSV from your ILS, upload it here, and get instant reports:
+        weeding candidates, collection gaps, age analysis, circulation stats,
+        MUSTIE/CREW scoring, diversity audits, and more.
     </p>
-    <br>
-    <a href="{{ url_for('upload') }}" class="btn">Import Data</a>
-    <form method="POST" action="{{ url_for('load_demo') }}" style="display: inline;">
-        <button type="submit" class="btn" style="background: var(--gray-500, #6b7280); margin-left: 8px;">Try the Demo</button>
-    </form>
+    <p style="font-size: 0.9rem; color: var(--gray-500, #718096); margin-top: 0.5rem;">
+        No account needed. Your data is never stored -- it is analyzed in memory and deleted immediately.
+    </p>
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('upload') }}" class="btn">Upload Your Catalog</a>
+        <form method="POST" action="{{ url_for('load_demo') }}" style="display: inline;">
+            <button type="submit" class="btn" style="background: var(--gray-500, #6b7280);">See It in Action</button>
+        </form>
+    </div>
+    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray-400, #a0aec0);">
+        Works with any ILS that can export to CSV or Excel.
+        <a href="{{ url_for('getting_started') }}">Setup guide</a>
+    </p>
 </div>
 {% endif %}
 {% endblock %}
