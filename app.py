@@ -25,6 +25,7 @@ from analyzer import (
     find_duplicates,
     cost_analysis,
     collection_freshness,
+    flag_banned_books,
 )
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
@@ -672,6 +673,64 @@ def export_full_catalog():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=full_catalog_export.csv"},
     )
+
+
+# ---------------------------------------------------------------------------
+# Banned / Challenged Books
+# ---------------------------------------------------------------------------
+
+@app.route("/banned-books")
+def banned_books():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
+    matches = flag_banned_books(df)
+    audience_breakdown = {}
+    if len(matches) > 0 and "audience" in matches.columns:
+        audience_breakdown = matches["audience"].value_counts().to_dict()
+    return render_template(
+        "banned_books.html",
+        matches=matches.head(500).fillna("").to_dict("records") if len(matches) > 0 else [],
+        total_matches=len(matches),
+        total_items=len(df),
+        audience_breakdown=audience_breakdown,
+        audience_filter=audience_filter,
+        filename=_current_filename,
+    )
+
+
+@app.route("/banned-books/upload", methods=["POST"])
+def upload_banned_list():
+    file = request.files.get("file")
+    if not file or not file.filename:
+        flash("Please select a file.", "error")
+        return redirect(url_for("banned_books"))
+    filepath = os.path.join(UPLOAD_DIR, "banned_books_custom.csv")
+    file.save(filepath)
+    flash(f"Custom banned books list uploaded from {file.filename}.", "success")
+    return redirect(url_for("banned_books"))
+
+
+@app.route("/export/banned-books")
+def export_banned_books():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    df, _ = _apply_audience_filter(df)
+    matches = flag_banned_books(df)
+    if len(matches) == 0:
+        flash("No banned book matches to export.", "error")
+        return redirect(url_for("banned_books"))
+    export_cols = ["title", "author", "call_number", "format", "banned_match"]
+    if "audience" in matches.columns:
+        export_cols.insert(4, "audience")
+    if "location" in matches.columns:
+        export_cols.insert(5, "location")
+    cols = [c for c in export_cols if c in matches.columns]
+    return _csv_response(matches[cols].fillna("").to_dict("records"), "banned_challenged_books.csv")
 
 
 if __name__ == "__main__":

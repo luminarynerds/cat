@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Banned/Challenged Books — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Banned &amp; Challenged Books</h2>
+    <p>Items in your collection that appear on frequently challenged lists</p>
+</div>
+
+{% include "partials/audience_filter.html" %}
+
+<div class="help-box">
+    <strong>What is this report for?</strong>
+    This report identifies titles in your collection that appear on publicly available
+    lists of frequently challenged or banned books (primarily from the American Library
+    Association). This is <strong>not a removal list</strong>. It helps you:
+    <ul>
+        <li>Know what challenged titles you have so you can be prepared if a patron raises concerns</li>
+        <li>Support your library's intellectual freedom and collection development policies</li>
+        <li>Ensure you have the context to respond to challenges with data</li>
+    </ul>
+</div>
+
+{% if matches %}
+<div class="export-bar">
+    <a href="{{ url_for('export_banned_books', audience=audience_filter or '') }}" class="btn-export">Download CSV</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Matched Titles</div>
+        <div class="value">{{ "{:,}".format(total_matches) }}</div>
+        <div class="detail">out of {{ "{:,}".format(total_items) }} items</div>
+    </div>
+    {% for aud, count in audience_breakdown.items() %}
+    <div class="stat-card">
+        <div class="label">{{ aud }}</div>
+        <div class="value">{{ count }}</div>
+        <div class="detail">matched titles</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <h3>Matched Items</h3>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call Number</th>
+                <th>Format</th>
+                <th>Source List</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in matches %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.format }}</td>
+                <td style="font-size: 12px; color: var(--gray-600);">{{ item.banned_match }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    No items in your collection matched the banned/challenged books lists.
+    This could mean your collection doesn't include these titles, or the
+    matching couldn't find them (matching works on normalized titles).
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Upload Custom List</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
+        Have your own list of challenged titles? Upload a CSV with a <strong>Title</strong>
+        column (and optionally <strong>Author</strong>). It will be merged with the built-in list.
+    </p>
+    <form method="POST" action="{{ url_for('upload_banned_list') }}" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv">
+        <button type="submit" class="btn btn-sm" style="margin-left: 8px;">Upload</button>
+    </form>
+</div>
+{% endblock %}
