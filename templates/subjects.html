@@ -44,6 +44,7 @@
 
 <div class="card">
     <h3>Detail Table</h3>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -66,6 +67,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 
 {% if dewey and dewey.dewey_tens %}
@@ -77,7 +79,7 @@
         {% else %}Most items use LC classification. Dewey items shown below.{% endif %}
         Click a row to see hundreds-level detail.
     </p>
-    <div style="overflow-x: auto;">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>

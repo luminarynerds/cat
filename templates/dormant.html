@@ -64,6 +64,7 @@
     <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
         How many items have gone quiet at each time horizon.
     </p>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -80,6 +81,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 
@@ -89,7 +91,7 @@
         Sorted by longest dormant first.
         {% if data.total_dormant > 200 %}Showing first 200 — download CSV for the full list.{% endif %}
     </p>
-    <div style="overflow-x: auto;">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>

@@ -59,7 +59,7 @@
         {% for aud, cnt in cat.by_audience.items() %}{{ aud }}: {{ cnt }}{% if not loop.last %}, {% endif %}{% endfor %}
     </p>
     {% endif %}
-    <div style="overflow-x: auto;">
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>

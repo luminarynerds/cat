@@ -43,6 +43,7 @@
 {% if circ.get("by_format") %}
 <div class="card">
     <h3>Circulation by Format</h3>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -63,12 +64,14 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 
 {% if circ.get("top_items") %}
 <div class="card">
     <h3>Top Circulating Items</h3>
+    <div class="table-scroll">
     <table>
         <thead>
             <tr>
@@ -91,6 +94,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 
