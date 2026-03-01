@@ -228,6 +228,15 @@ LC_CLASS_LABELS = {
     "Z": "Bibliography & Library Science",
 }
 
+# Format values that indicate digital/electronic items.
+# Matched case-insensitively against the 'format' column.
+DIGITAL_FORMATS = {
+    "ebook", "e-book", "digital", "online resource",
+    "eaudiobook", "e-audiobook", "streaming video", "streaming audio",
+    "database", "electronic", "hoopla", "libby", "kanopy",
+    "axis 360", "cloudlibrary",
+}
+
 
 def import_catalog(filepath: str) -> pd.DataFrame:
     """Full pipeline: load, normalize, type-coerce, and enrich catalog data."""
@@ -235,4 +244,11 @@ def import_catalog(filepath: str) -> pd.DataFrame:
     df = normalize_columns(df)
     df = coerce_types(df)
     df["lc_class"] = df["call_number"].apply(extract_lc_class)
+    df["is_digital"] = (
+        df["format"]
+        .fillna("")
+        .str.strip()
+        .str.lower()
+        .isin(DIGITAL_FORMATS)
+    )
     return df
