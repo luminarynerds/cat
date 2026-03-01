@@ -1,5 +1,8 @@
 """Collection analysis engine for library catalog data."""
 
+import json
+import os
+import re
 from datetime import datetime
 
 import pandas as pd
@@ -496,3 +499,81 @@ def collection_freshness(df: pd.DataFrame) -> list[dict]:
         })
 
     return sorted(rows, key=lambda r: r["fresh_pct"])
+
+
+def _normalize_title(title: str) -> str:
+    """Normalize a title for fuzzy matching."""
+    if pd.isna(title):
+        return ""
+    s = str(title).lower().strip()
+    s = re.sub(r"^(the|a|an)\s+", "", s)
+    s = re.sub(r"[^\w\s]", "", s)
+    return s.strip()
+
+
+def _normalize_author(author: str) -> str:
+    """Normalize an author name for matching."""
+    if pd.isna(author):
+        return ""
+    s = str(author).lower().strip()
+    s = re.sub(r"[^\w\s]", "", s)
+    return s.strip()
+
+
+def _load_banned_list() -> list[dict]:
+    """Load the built-in banned books list."""
+    path = os.path.join(os.path.dirname(__file__), "data", "banned_books.json")
+    if not os.path.exists(path):
+        return []
+    with open(path) as f:
+        return json.load(f)
+
+
+def _load_custom_banned_list() -> list[dict]:
+    """Load user-uploaded custom banned list if it exists."""
+    path = os.path.join(os.path.dirname(__file__), "uploads", "banned_books_custom.csv")
+    if not os.path.exists(path):
+        return []
+    custom_df = pd.read_csv(path)
+    entries = []
+    for _, row in custom_df.iterrows():
+        entry = {"title": str(row.get("Title", row.get("title", ""))), "source": "Custom upload"}
+        if "Author" in custom_df.columns or "author" in custom_df.columns:
+            entry["author"] = str(row.get("Author", row.get("author", "")))
+        entries.append(entry)
+    return entries
+
+
+def flag_banned_books(df: pd.DataFrame) -> pd.DataFrame:
+    """Match catalog items against banned/challenged book lists."""
+    banned = _load_banned_list() + _load_custom_banned_list()
+    if not banned:
+        return pd.DataFrame()
+
+    lookup: dict[str, list[dict]] = {}
+    for entry in banned:
+        norm_title = _normalize_title(entry.get("title", ""))
+        if not norm_title:
+            continue
+        lookup.setdefault(norm_title, []).append({
+            "author": _normalize_author(entry.get("author", "")),
+            "source": entry.get("source", "Unknown"),
+        })
+
+    results = []
+    for idx, row in df.iterrows():
+        norm_title = _normalize_title(row.get("title", ""))
+        if norm_title not in lookup:
+            continue
+        for match in lookup[norm_title]:
+            if match["author"]:
+                cat_author = _normalize_author(row.get("author", ""))
+                author_parts = match["author"].split()
+                if not any(part in cat_author for part in author_parts if len(part) > 2):
+                    continue
+            results.append({**row.to_dict(), "_idx": idx, "banned_match": match["source"]})
+            break
+
+    if not results:
+        return pd.DataFrame()
+    return pd.DataFrame(results)
