@@ -5,4 +5,5 @@ uploads/
 *.egg-info/
 dist/
 build/
+*.spec
 uploads/.last_upload.json
