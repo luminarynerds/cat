@@ -23,4 +23,17 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') close();
     });
+
+    // Collapsible nav sections
+    var sections = sidebar.querySelectorAll('.nav-section');
+    for (var i = 0; i < sections.length; i++) {
+        sections[i].addEventListener('click', function () {
+            var group = this.nextElementSibling;
+            if (!group) return;
+            var isOpen = this.classList.contains('open');
+            this.classList.toggle('open', !isOpen);
+            group.classList.toggle('open', !isOpen);
+            this.setAttribute('aria-expanded', !isOpen);
+        });
+    }
 });

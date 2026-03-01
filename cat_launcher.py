@@ -55,10 +55,8 @@ def main():
     print("  ╚══════════════════════════════════════════╝")
     print()
 
-    # Open browser in background thread
     threading.Thread(target=open_browser, args=(port,), daemon=True).start()
 
-    # Import and run Flask app
     from app import app
     app.run(debug=False, host="127.0.0.1", port=port)
 

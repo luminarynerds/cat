@@ -18,38 +18,45 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h1>Collection Analyzer</h1>
-            <div class="subtitle">Library Catalog Tool</div>
         </div>
         <nav>
             <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a>
             <a href="{{ url_for('executive_summary') }}" class="{% if request.endpoint == 'executive_summary' %}active{% endif %}">Board Summary</a>
-            <a href="{{ url_for('getting_started') }}" class="{% if request.endpoint == 'getting_started' %}active{% endif %}">Getting Started</a>
             <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}active{% endif %}">Import Data</a>
 
-            <div class="section-label">Analysis</div>
-            <a href="{{ url_for('gaps') }}" class="{% if request.endpoint == 'gaps' %}active{% endif %}">Collection Gaps</a>
-            <a href="{{ url_for('subjects') }}" class="{% if request.endpoint == 'subjects' %}active{% endif %}">Subject Balance</a>
-            <a href="{{ url_for('freshness') }}" class="{% if request.endpoint == 'freshness' %}active{% endif %}">Freshness</a>
-            <a href="{{ url_for('age') }}" class="{% if request.endpoint == 'age' %}active{% endif %}">Age Distribution</a>
-            <a href="{{ url_for('formats') }}" class="{% if request.endpoint == 'formats' %}active{% endif %}">Format Breakdown</a>
-            <a href="{{ url_for('duplicates') }}" class="{% if request.endpoint == 'duplicates' %}active{% endif %}">Duplicates</a>
-            <a href="{{ url_for('cost') }}" class="{% if request.endpoint == 'cost' %}active{% endif %}">Cost &amp; ROI</a>
+            {% set analysis_endpoints = ['gaps', 'subjects', 'freshness', 'age', 'formats', 'duplicates', 'cost'] %}
+            <button class="nav-section {% if request.endpoint in analysis_endpoints %}open{% endif %}" aria-expanded="{% if request.endpoint in analysis_endpoints %}true{% else %}false{% endif %}">Collection</button>
+            <div class="nav-group {% if request.endpoint in analysis_endpoints %}open{% endif %}">
+                <a href="{{ url_for('gaps') }}" class="{% if request.endpoint == 'gaps' %}active{% endif %}">Gaps</a>
+                <a href="{{ url_for('subjects') }}" class="{% if request.endpoint == 'subjects' %}active{% endif %}">Subject Balance</a>
+                <a href="{{ url_for('freshness') }}" class="{% if request.endpoint == 'freshness' %}active{% endif %}">Freshness</a>
+                <a href="{{ url_for('age') }}" class="{% if request.endpoint == 'age' %}active{% endif %}">Age Distribution</a>
+                <a href="{{ url_for('formats') }}" class="{% if request.endpoint == 'formats' %}active{% endif %}">Formats</a>
+                <a href="{{ url_for('duplicates') }}" class="{% if request.endpoint == 'duplicates' %}active{% endif %}">Duplicates</a>
+                <a href="{{ url_for('cost') }}" class="{% if request.endpoint == 'cost' %}active{% endif %}">Cost &amp; ROI</a>
+            </div>
 
-            <div class="section-label">Circulation</div>
-            <a href="{{ url_for('circulation') }}" class="{% if request.endpoint == 'circulation' %}active{% endif %}">Usage Analysis</a>
-            <a href="{{ url_for('dormant') }}" class="{% if request.endpoint == 'dormant' %}active{% endif %}">Dormant Items</a>
-            <a href="{{ url_for('weeding') }}" class="{% if request.endpoint == 'weeding' %}active{% endif %}">Weeding (Simple)</a>
-            <a href="{{ url_for('mustie_weeding') }}" class="{% if request.endpoint in ('mustie_weeding', 'mustie_settings') %}active{% endif %}">Weeding (MUSTIE)</a>
+            {% set circ_endpoints = ['circulation', 'dormant', 'weeding', 'mustie_weeding', 'mustie_settings'] %}
+            <button class="nav-section {% if request.endpoint in circ_endpoints %}open{% endif %}" aria-expanded="{% if request.endpoint in circ_endpoints %}true{% else %}false{% endif %}">Circulation &amp; Weeding</button>
+            <div class="nav-group {% if request.endpoint in circ_endpoints %}open{% endif %}">
+                <a href="{{ url_for('circulation') }}" class="{% if request.endpoint == 'circulation' %}active{% endif %}">Usage Analysis</a>
+                <a href="{{ url_for('dormant') }}" class="{% if request.endpoint == 'dormant' %}active{% endif %}">Dormant Items</a>
+                <a href="{{ url_for('weeding') }}" class="{% if request.endpoint == 'weeding' %}active{% endif %}">Weeding (Simple)</a>
+                <a href="{{ url_for('mustie_weeding') }}" class="{% if request.endpoint in ('mustie_weeding', 'mustie_settings') %}active{% endif %}">Weeding (MUSTIE)</a>
+            </div>
 
-            <div class="section-label">Special</div>
-            <a href="{{ url_for('banned_books') }}" class="{% if request.endpoint == 'banned_books' %}active{% endif %}">Banned/Challenged Books</a>
-            <a href="{{ url_for('diversity') }}" class="{% if request.endpoint == 'diversity' %}active{% endif %}">Diversity Audit</a>
+            {% set special_endpoints = ['banned_books', 'diversity'] %}
+            <button class="nav-section {% if request.endpoint in special_endpoints %}open{% endif %}" aria-expanded="{% if request.endpoint in special_endpoints %}true{% else %}false{% endif %}">Special Reports</button>
+            <div class="nav-group {% if request.endpoint in special_endpoints %}open{% endif %}">
+                <a href="{{ url_for('banned_books') }}" class="{% if request.endpoint == 'banned_books' %}active{% endif %}">Banned/Challenged</a>
+                <a href="{{ url_for('diversity') }}" class="{% if request.endpoint == 'diversity' %}active{% endif %}">Diversity Audit</a>
+            </div>
 
-            <div class="section-label">Data</div>
             <a href="{{ url_for('column_mapping') }}" class="{% if request.endpoint == 'column_mapping' %}active{% endif %}">Column Mapping</a>
+            <a href="{{ url_for('getting_started') }}" class="{% if request.endpoint == 'getting_started' %}active{% endif %}">Help</a>
         </nav>
         {% if filename %}
-        <div class="file-info">Loaded: {{ filename }}</div>
+        <div class="file-info">{{ filename }}</div>
         {% endif %}
     </aside>
 

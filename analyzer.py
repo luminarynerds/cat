@@ -761,7 +761,6 @@ def collection_freshness(df: pd.DataFrame) -> list[dict]:
 
 
 def _normalize_title(title: str) -> str:
-    """Normalize a title for fuzzy matching."""
     if pd.isna(title):
         return ""
     s = str(title).lower().strip()
@@ -771,7 +770,6 @@ def _normalize_title(title: str) -> str:
 
 
 def _normalize_author(author: str) -> str:
-    """Normalize an author name for matching."""
     if pd.isna(author):
         return ""
     s = str(author).lower().strip()

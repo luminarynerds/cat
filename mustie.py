@@ -57,7 +57,6 @@ FAST_CHANGING_SUBJECTS = {"K", "Q", "R", "T", "Z"}
 
 
 def get_default_thresholds() -> dict[str, dict]:
-    """Return a copy of the default CREW thresholds."""
     import copy
     return copy.deepcopy(DEFAULT_CREW_THRESHOLDS)
 
@@ -65,17 +64,7 @@ def get_default_thresholds() -> dict[str, dict]:
 def apply_mustie(df: pd.DataFrame,
                  thresholds: dict[str, dict] | None = None,
                  circ_floor: int | None = None) -> pd.DataFrame:
-    """Evaluate every item against MUSTIE criteria.
-
-    Args:
-        df: The catalog DataFrame (must have lc_class, pub_year, checkouts, etc.)
-        thresholds: Per-subject age/circ thresholds (defaults to CREW guidelines)
-        circ_floor: Optional global fallback for minimum checkout count.
-                    Per-subject values from thresholds take priority.
-
-    Returns:
-        A DataFrame of flagged items with MUSTIE columns added.
-    """
+    """Evaluate every item against MUSTIE criteria and return flagged items."""
     if thresholds is None:
         thresholds = DEFAULT_CREW_THRESHOLDS
 

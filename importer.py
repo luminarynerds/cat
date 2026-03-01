@@ -4,21 +4,20 @@ import pandas as pd
 
 # Common column name variations from ILS exports, mapped to our canonical names.
 COLUMN_ALIASES = {
-    # Title
     "title": "title",
     "btitle": "title",
     "item title": "title",
     "bib title": "title",
-    # Author
+
     "author": "author",
     "primary author": "author",
     "main author": "author",
     "bib author": "author",
-    # ISBN
+
     "isbn": "isbn",
     "isbn13": "isbn",
     "isbn-13": "isbn",
-    # Call number
+
     "call number": "call_number",
     "call #": "call_number",
     "call no": "call_number",
@@ -26,7 +25,7 @@ COLUMN_ALIASES = {
     "callnumber": "call_number",
     "local call number": "call_number",
     "lc call number": "call_number",
-    # Publication year
+
     "pub year": "pub_year",
     "publication year": "pub_year",
     "pub_year": "pub_year",
@@ -35,58 +34,58 @@ COLUMN_ALIASES = {
     "date": "pub_year",
     "publication date": "pub_year",
     "pub date": "pub_year",
-    # Subject
+
     "subject": "subject",
     "subjects": "subject",
     "primary subject": "subject",
     "subject heading": "subject",
     "topical subject": "subject",
-    # Format / Material type
+
     "format": "format",
     "material type": "format",
     "mat type": "format",
     "item type": "format",
     "itype": "format",
     "type": "format",
-    # Location / Branch
+
     "location": "location",
     "branch": "location",
     "library": "location",
     "sublocation": "location",
-    # Barcode
+
     "barcode": "barcode",
     "item barcode": "barcode",
-    # Checkouts / Circulation
+
     "checkouts": "checkouts",
     "total checkouts": "checkouts",
     "total circs": "checkouts",
     "ytd circ": "checkouts",
     "circ count": "checkouts",
     "circs": "checkouts",
-    # Last checkout date
+
     "last checkout": "last_checkout",
     "last checkout date": "last_checkout",
     "last circ date": "last_checkout",
     "last activity": "last_checkout",
-    # Item creation / Added date
+
     "created date": "date_added",
     "date added": "date_added",
     "creation date": "date_added",
     "cataloged date": "date_added",
     "cat date": "date_added",
-    # Status
+
     "status": "status",
     "item status": "status",
-    # Price / Cost
+
     "price": "price",
     "cost": "price",
     "replacement cost": "price",
     "list price": "price",
-    # Collection code
+
     "collection": "collection",
     "collection code": "collection",
     "ccode": "collection",
-    # Copies
+
     "copies": "copies",
     "copy count": "copies",
     "number of copies": "copies",
