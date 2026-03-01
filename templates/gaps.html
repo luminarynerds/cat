@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Collection Gaps — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Collection Gaps</h2>
+    <p>Potential holes and weaknesses in your collection</p>
+</div>
+
+{% if gaps.get("underrepresented_subjects") %}
+<div class="card">
+    <h3>Underrepresented Subject Areas</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
+        Subject areas that make up less than 3% of your collection.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Items</th>
+                <th>% of Collection</th>
+                <th>Avg Checkouts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in gaps.underrepresented_subjects %}
+            <tr>
+                <td>{{ s.broad_class }}</td>
+                <td>{{ s.label }}</td>
+                <td>{{ s.count }}</td>
+                <td>
+                    {% if s.percentage < 1 %}
+                    <span class="gap-badge high">{{ s.percentage }}%</span>
+                    {% else %}
+                    <span class="gap-badge medium">{{ s.percentage }}%</span>
+                    {% endif %}
+                </td>
+                <td>{{ s.avg_checkouts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if gaps.get("missing_recent") %}
+<div class="card">
+    <h3>Subjects Lacking Recent Material</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
+        Subject areas with fewer than 5 items published in the last 5 years.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Recent Items (last 5 yrs)</th>
+                <th>Severity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in gaps.missing_recent %}
+            <tr>
+                <td>{{ s.broad_class }}</td>
+                <td>{{ s.label }}</td>
+                <td>{{ s.recent_count }}</td>
+                <td>
+                    {% if s.recent_count == 0 %}
+                    <span class="gap-badge high">None</span>
+                    {% else %}
+                    <span class="gap-badge medium">Low</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if gaps.get("aging_areas") %}
+<div class="card">
+    <h3>Aging Subject Areas</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
+        Subjects where the median publication year is more than 15 years old.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Median Pub Year</th>
+                <th>Median Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in gaps.aging_areas %}
+            <tr>
+                <td>{{ s.broad_class }}</td>
+                <td>{{ s.label }}</td>
+                <td>{{ s.pub_year | int }}</td>
+                <td>{{ s.median_age | int }} years</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if gaps.get("low_circulation") %}
+<div class="card">
+    <h3>Non-Circulating Items</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
+        {{ "{:,}".format(gaps.low_circulation.count) }} items ({{ gaps.low_circulation.percentage }}% of collection)
+        have never been checked out.
+    </p>
+    {% if gaps.low_circulation.sample %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call Number</th>
+                <th>Pub Year</th>
+                <th>Format</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in gaps.low_circulation.sample %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.pub_year }}</td>
+                <td>{{ item.format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="color: var(--gray-600); font-size: 13px; margin-top: 8px;">
+        Showing first 20 items. See the Weeding Candidates report for the full list.
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if not gaps %}
+<div class="alert alert-info">
+    Not enough data to detect gaps. Ensure your export includes call numbers and publication years.
+</div>
+{% endif %}
+{% endblock %}

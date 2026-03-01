@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Age Distribution — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Age Distribution</h2>
+    <p>Collection breakdown by publication decade</p>
+</div>
+
+{% if distribution %}
+<div class="card">
+    <h3>Items by Decade</h3>
+    <div class="bar-chart">
+        {% set max_count = distribution | map(attribute='count') | max %}
+        {% for d in distribution %}
+        <div class="bar-row">
+            <div class="bar-label">{{ d.decade }}s</div>
+            <div class="bar-track">
+                <div class="bar-fill" style="width: {{ (d.count / max_count * 100) | round(1) }}%"></div>
+            </div>
+            <div class="bar-value">{{ d.count }} items</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Detail Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Decade</th>
+                <th>Items</th>
+                <th>Avg Checkouts</th>
+                <th>Age (years)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in distribution %}
+            <tr>
+                <td>{{ d.decade }}s</td>
+                <td>{{ d.count }}</td>
+                <td>{{ d.avg_checkouts }}</td>
+                <td>{{ d.age_years }}+</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No publication year data found. Age analysis requires publication years in your export.
+</div>
+{% endif %}
+{% endblock %}

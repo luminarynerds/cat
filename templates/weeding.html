@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Weeding Candidates — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Weeding Candidates</h2>
+    <p>Items that may be candidates for deselection based on age and circulation</p>
+</div>
+
+<div class="card">
+    <h3>Filter Criteria</h3>
+    <form class="inline-form" method="GET">
+        <label>Older than</label>
+        <input type="number" name="age" value="{{ age_threshold }}" min="1" max="100"> years
+        <label>AND fewer than</label>
+        <input type="number" name="circ" value="{{ circ_threshold }}" min="0" max="100"> checkouts
+        <button type="submit" class="btn btn-sm">Update</button>
+    </form>
+</div>
+
+{% if candidates %}
+<div class="alert alert-warning">
+    Found <strong>{{ "{:,}".format(total_candidates) }}</strong> potential weeding candidates
+    out of {{ "{:,}".format(total_items) }} total items
+    ({{ (total_candidates / total_items * 100) | round(1) }}%).
+    {% if total_candidates > 200 %}Showing first 200.{% endif %}
+</div>
+
+<div class="card">
+    <h3>Candidate Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call Number</th>
+                <th>Pub Year</th>
+                <th>Age</th>
+                <th>Checkouts</th>
+                <th>Format</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in candidates %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
+                <td>{{ item.age | int }} yrs</td>
+                <td>{{ item.checkouts | int if item.checkouts else 0 }}</td>
+                <td>{{ item.format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No weeding candidates found with the current criteria. Try adjusting the thresholds above.
+</div>
+{% endif %}
+{% endblock %}

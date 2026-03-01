@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard</h2>
+    <p>Overview of your library collection</p>
+</div>
+
+{% if summary %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Items</div>
+        <div class="value">{{ "{:,}".format(summary.total_items) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Unique Titles</div>
+        <div class="value">{{ "{:,}".format(summary.unique_titles) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Unique Authors</div>
+        <div class="value">{{ "{:,}".format(summary.unique_authors) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Formats</div>
+        <div class="value">{{ summary.formats }}</div>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Publication Year Range</div>
+        {% if summary.year_range[0] %}
+        <div class="value">{{ summary.year_range[0] }}–{{ summary.year_range[1] }}</div>
+        {% else %}
+        <div class="value">—</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <div class="label">Median Age</div>
+        <div class="value">{{ summary.median_age if summary.median_age else "—" }}</div>
+        <div class="detail">years</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Checkouts</div>
+        <div class="value">{{ "{:,}".format(summary.total_checkouts) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Never Circulated</div>
+        <div class="value">{{ "{:,}".format(summary.items_never_circulated) if summary.items_never_circulated is not none else "—" }}</div>
+        <div class="detail">items with 0 checkouts</div>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="card" style="grid-column: 1 / -1;">
+        <h3>Quick Links</h3>
+        <p style="margin-bottom: 12px; color: var(--gray-600); font-size: 14px;">
+            Jump to a report to find actionable insights about your collection.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{{ url_for('gaps') }}" class="btn">Collection Gaps</a>
+            <a href="{{ url_for('subjects') }}" class="btn">Subject Balance</a>
+            <a href="{{ url_for('age') }}" class="btn">Age Distribution</a>
+            <a href="{{ url_for('weeding') }}" class="btn">Weeding Candidates</a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="icon">&#128218;</div>
+    <h3>No data loaded yet</h3>
+    <p>Upload a CSV or Excel export from your ILS to get started.</p>
+    <br>
+    <a href="{{ url_for('upload') }}" class="btn">Import Data</a>
+</div>
+{% endif %}
+{% endblock %}

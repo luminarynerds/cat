@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Library Collection Analyzer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>Collection Analyzer</h1>
+            <div class="subtitle">Library Catalog Tool</div>
+        </div>
+        <nav>
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}active{% endif %}">Import Data</a>
+
+            <div class="section-label">Analysis</div>
+            <a href="{{ url_for('gaps') }}" class="{% if request.endpoint == 'gaps' %}active{% endif %}">Collection Gaps</a>
+            <a href="{{ url_for('subjects') }}" class="{% if request.endpoint == 'subjects' %}active{% endif %}">Subject Balance</a>
+            <a href="{{ url_for('age') }}" class="{% if request.endpoint == 'age' %}active{% endif %}">Age Distribution</a>
+            <a href="{{ url_for('formats') }}" class="{% if request.endpoint == 'formats' %}active{% endif %}">Format Breakdown</a>
+
+            <div class="section-label">Circulation</div>
+            <a href="{{ url_for('circulation') }}" class="{% if request.endpoint == 'circulation' %}active{% endif %}">Usage Analysis</a>
+            <a href="{{ url_for('weeding') }}" class="{% if request.endpoint == 'weeding' %}active{% endif %}">Weeding Candidates</a>
+
+            <div class="section-label">Data</div>
+            <a href="{{ url_for('column_mapping') }}" class="{% if request.endpoint == 'column_mapping' %}active{% endif %}">Column Mapping</a>
+        </nav>
+        {% if filename %}
+        <div class="file-info">Loaded: {{ filename }}</div>
+        {% endif %}
+    </aside>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

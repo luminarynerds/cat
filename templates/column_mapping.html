@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Column Mapping — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Column Mapping</h2>
+    <p>How your data fields were mapped from the uploaded file</p>
+</div>
+
+<div class="card">
+    <h3>Detected Fields</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
+        Green = fully populated, yellow = partially populated, gray = no data found.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Status</th>
+                <th>Populated</th>
+                <th>Coverage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for col in mapping %}
+            <tr>
+                <td>
+                    {% if col.percentage >= 90 %}
+                    <span class="col-status full"></span>
+                    {% elif col.percentage > 0 %}
+                    <span class="col-status partial"></span>
+                    {% else %}
+                    <span class="col-status empty"></span>
+                    {% endif %}
+                    {{ col.column }}
+                </td>
+                <td>
+                    {% if col.percentage >= 90 %}
+                    <span class="gap-badge low">Full</span>
+                    {% elif col.percentage > 0 %}
+                    <span class="gap-badge medium">Partial</span>
+                    {% else %}
+                    <span class="gap-badge high">Empty</span>
+                    {% endif %}
+                </td>
+                <td>{{ "{:,}".format(col.populated) }} / {{ "{:,}".format(col.total) }}</td>
+                <td>{{ col.percentage }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="alert alert-info">
+    Empty fields are normal — the analysis adapts to whatever data is available.
+    For the best gap analysis, ensure at least <strong>Call Number</strong> and
+    <strong>Publication Year</strong> are present.
+</div>
+{% endblock %}

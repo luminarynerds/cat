@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Usage Analysis — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Usage Analysis</h2>
+    <p>Circulation patterns across your collection</p>
+</div>
+
+{% if circ %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Checkouts</div>
+        <div class="value">{{ "{:,}".format(circ.total_checkouts) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Avg per Item</div>
+        <div class="value">{{ circ.avg_checkouts_per_item }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Median Checkouts</div>
+        <div class="value">{{ circ.median_checkouts }}</div>
+    </div>
+</div>
+
+{% if circ.get("by_format") %}
+<div class="card">
+    <h3>Circulation by Format</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Format</th>
+                <th>Total Checkouts</th>
+                <th>Avg per Item</th>
+                <th>Median</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in circ.by_format %}
+            <tr>
+                <td>{{ f.format }}</td>
+                <td>{{ f.total | int }}</td>
+                <td>{{ f.average }}</td>
+                <td>{{ f.median | int }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if circ.get("top_items") %}
+<div class="card">
+    <h3>Top Circulating Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call Number</th>
+                <th>Format</th>
+                <th>Checkouts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in circ.top_items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.format }}</td>
+                <td><strong>{{ item.checkouts | int }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">
+    No checkout data found. Circulation analysis requires checkout counts in your export.
+</div>
+{% endif %}
+{% endblock %}

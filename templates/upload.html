@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Import Data — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Import Data</h2>
+    <p>Upload a CSV or Excel file exported from your ILS</p>
+</div>
+
+<div class="card">
+    <h3>Upload File</h3>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="upload-area">
+            <p><strong>Select a catalog export file</strong></p>
+            <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+                Supported formats: CSV (.csv), Excel (.xlsx, .xls)
+            </p>
+            <input type="file" name="file" accept=".csv,.xlsx,.xls">
+            <br><br>
+            <button type="submit" class="btn">Upload &amp; Analyze</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Supported Column Names</h3>
+    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
+        The analyzer automatically recognizes common ILS export column names.
+        Your file does not need to have all of these — the tool works with whatever data you have.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Data Field</th>
+                <th>Recognized Column Names</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Title</td><td>Title, BTitle, Item Title, Bib Title</td></tr>
+            <tr><td>Author</td><td>Author, Primary Author, Main Author, Bib Author</td></tr>
+            <tr><td>ISBN</td><td>ISBN, ISBN13, ISBN-13</td></tr>
+            <tr><td>Call Number</td><td>Call Number, Call #, Call No, Local Call Number</td></tr>
+            <tr><td>Publication Year</td><td>Pub Year, Publication Year, Year, Date, Pub Date</td></tr>
+            <tr><td>Subject</td><td>Subject, Subjects, Primary Subject, Subject Heading</td></tr>
+            <tr><td>Format</td><td>Format, Material Type, Mat Type, Item Type, IType</td></tr>
+            <tr><td>Location</td><td>Location, Branch, Library</td></tr>
+            <tr><td>Barcode</td><td>Barcode, Item Barcode</td></tr>
+            <tr><td>Checkouts</td><td>Checkouts, Total Checkouts, Total Circs, YTD Circ, Circs</td></tr>
+            <tr><td>Last Checkout</td><td>Last Checkout, Last Checkout Date, Last Circ Date</td></tr>
+            <tr><td>Date Added</td><td>Created Date, Date Added, Cataloged Date, Cat Date</td></tr>
+            <tr><td>Status</td><td>Status, Item Status</td></tr>
+            <tr><td>Price</td><td>Price, Cost, Replacement Cost, List Price</td></tr>
+            <tr><td>Collection</td><td>Collection, Collection Code, CCode</td></tr>
+            <tr><td>Copies</td><td>Copies, Copy Count, Number of Copies</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

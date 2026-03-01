@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Subject Balance — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Subject Balance</h2>
+    <p>Distribution of items across LC classification subject areas</p>
+</div>
+
+{% if subjects %}
+<div class="card">
+    <h3>Subject Distribution</h3>
+    <div class="bar-chart">
+        {% for s in subjects %}
+        <div class="bar-row">
+            <div class="bar-label">{{ s.broad_class }} — {{ s.label }}</div>
+            <div class="bar-track">
+                <div class="bar-fill" style="width: {{ s.percentage }}%"></div>
+            </div>
+            <div class="bar-value">{{ s.count }} ({{ s.percentage }}%)</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Detail Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Items</th>
+                <th>% of Collection</th>
+                <th>Avg Checkouts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in subjects %}
+            <tr>
+                <td>{{ s.broad_class }}</td>
+                <td>{{ s.label }}</td>
+                <td>{{ s.count }}</td>
+                <td>{{ s.percentage }}%</td>
+                <td>{{ s.avg_checkouts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No call number data found. Subject analysis requires call numbers in your export.
+</div>
+{% endif %}
+{% endblock %}

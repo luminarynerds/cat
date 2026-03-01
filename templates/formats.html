@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Format Breakdown — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Format Breakdown</h2>
+    <p>Distribution of items by material type</p>
+</div>
+
+{% if formats %}
+<div class="card">
+    <h3>Format Distribution</h3>
+    <div class="bar-chart">
+        {% set max_count = formats | map(attribute='count') | max %}
+        {% for f in formats %}
+        <div class="bar-row">
+            <div class="bar-label">{{ f.format }}</div>
+            <div class="bar-track">
+                <div class="bar-fill" style="width: {{ (f.count / max_count * 100) | round(1) }}%"></div>
+            </div>
+            <div class="bar-value">{{ f.count }} ({{ f.percentage }}%)</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Detail Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Format</th>
+                <th>Items</th>
+                <th>% of Collection</th>
+                <th>Avg Checkouts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in formats %}
+            <tr>
+                <td>{{ f.format }}</td>
+                <td>{{ f.count }}</td>
+                <td>{{ f.percentage }}%</td>
+                <td>{{ f.avg_checkouts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No format/material type data found in your export.
+</div>
+{% endif %}
+{% endblock %}
