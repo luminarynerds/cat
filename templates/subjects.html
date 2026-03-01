@@ -67,6 +67,56 @@
         </tbody>
     </table>
 </div>
+
+{% if dewey and dewey.dewey_tens %}
+<div class="card">
+    <h3>Dewey Decimal Breakdown</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+        {% if dewey.dominant_system == 'Dewey' %}Your collection primarily uses Dewey Decimal classification.
+        {% elif dewey.dominant_system == 'Mixed' %}Your collection uses both LC and Dewey classification. Dewey items shown below.
+        {% else %}Most items use LC classification. Dewey items shown below.{% endif %}
+        Click a row to see hundreds-level detail.
+    </p>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Items</th>
+                <th>% of Dewey</th>
+                <th>Avg Checkouts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in dewey.dewey_tens %}
+            <tr class="dewey-toggle" data-tens="{{ t.dewey_tens }}" style="cursor: pointer;">
+                <td><span class="toggle-arrow" style="font-size: 11px; color: var(--gray-600);">&#9654;</span></td>
+                <td><strong>{{ t.dewey_tens }}</strong></td>
+                <td>{{ t.label }}</td>
+                <td>{{ t.count }}</td>
+                <td>{{ t.percentage }}%</td>
+                <td>{{ t.avg_checkouts }}</td>
+            </tr>
+            {% if dewey.dewey_hundreds.get(t.dewey_tens) %}
+            {% for h in dewey.dewey_hundreds[t.dewey_tens] %}
+            <tr class="dewey-hundreds-{{ t.dewey_tens }}" style="display: none; background: var(--gray-50);">
+                <td></td>
+                <td style="padding-left: 24px; font-size: 13px;">{{ h.dewey_class }}</td>
+                <td style="font-size: 13px;">{{ h.label }}</td>
+                <td style="font-size: 13px;">{{ h.count }}</td>
+                <td style="font-size: 13px;"></td>
+                <td style="font-size: 13px;">{{ h.avg_checkouts }}</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
 {% else %}
 <div class="alert alert-info">
     No call number data found. Subject analysis requires <strong>Call Number</strong>

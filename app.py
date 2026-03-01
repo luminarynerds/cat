@@ -16,6 +16,7 @@ from analyzer import (
     collection_summary,
     age_distribution,
     subject_balance,
+    dewey_subject_balance,
     find_gaps,
     format_breakdown,
     digital_physical_split,
@@ -238,12 +239,14 @@ def subjects():
     df, audience_filter = _apply_audience_filter(df)
 
     balance = subject_balance(df)
+    dewey = dewey_subject_balance(df)
     return render_template(
         "subjects.html",
         subjects=balance,
+        dewey=dewey,
         chart_data=json.dumps(balance),
-        filename=_current_filename,
         audience_filter=audience_filter,
+        filename=_current_filename,
     )
 
 
