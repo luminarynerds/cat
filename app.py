@@ -7,6 +7,7 @@ import json
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, Response,
+    send_file,
 )
 import pandas as pd
 
@@ -86,6 +87,18 @@ def upload():
         return redirect(url_for("index"))
 
     return render_template("upload.html")
+
+
+TEMPLATE_ALLOWLIST = {"template_blank.csv", "template_example.csv"}
+
+
+@app.route("/download-template/<name>")
+def download_template(name):
+    if name not in TEMPLATE_ALLOWLIST:
+        flash("Template not found.", "error")
+        return redirect(url_for("upload"))
+    filepath = os.path.join(os.path.dirname(__file__), "sample_data", name)
+    return send_file(filepath, as_attachment=True, download_name=name)
 
 
 @app.route("/column-mapping", methods=["GET"])
