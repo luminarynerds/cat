@@ -379,3 +379,119 @@ tbody tr:hover {
 .col-status.full { background: #48bb78; }
 .col-status.partial { background: #ecc94b; }
 .col-status.empty { background: #e2e8f0; }
+
+/* Help / explainer boxes */
+.help-box {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    color: var(--gray-800);
+    line-height: 1.7;
+}
+
+.help-box strong {
+    color: var(--primary-dark);
+}
+
+.help-box ul {
+    margin: 8px 0 0 20px;
+    padding: 0;
+}
+
+.help-box ul li {
+    margin-bottom: 4px;
+}
+
+/* Step indicator for getting-started / upload walkthrough */
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+}
+
+.step {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.step:last-child {
+    border-bottom: none;
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.step-number.done {
+    background: var(--success);
+}
+
+.step-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.step-content p {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Export button bar */
+.export-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-export:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Print-friendly: hide sidebar, nav, export buttons when printing */
+@media print {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; padding: 16px; max-width: 100%; }
+    .export-bar { display: none; }
+    .btn, .btn-export, .btn-sm { display: none; }
+    .help-box { break-inside: avoid; }
+    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+}

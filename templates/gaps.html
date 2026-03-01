@@ -7,11 +7,34 @@
     <p>Potential holes and weaknesses in your collection</p>
 </div>
 
+<div class="help-box">
+    <strong>What does this report show?</strong>
+    This is the core report for collection development. It identifies four types of gaps:
+    <ul>
+        <li><strong>Underrepresented Subjects</strong> &mdash; subject areas that make up a
+            very small percentage of your collection compared to others.</li>
+        <li><strong>Subjects Lacking Recent Material</strong> &mdash; areas where you have
+            very few (or zero) items published in the last 5 years.</li>
+        <li><strong>Aging Areas</strong> &mdash; subjects where the typical item is more
+            than 15 years old, meaning the section may contain outdated information.</li>
+        <li><strong>Non-Circulating Items</strong> &mdash; items that have never been
+            checked out at all.</li>
+    </ul>
+    Not every gap is a problem &mdash; some areas are intentionally small at certain libraries.
+    Use this as a starting point for conversations with your director or collection
+    development team.
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_gaps') }}" class="btn-export">Download CSV</a>
+</div>
+
 {% if gaps.get("underrepresented_subjects") %}
 <div class="card">
     <h3>Underrepresented Subject Areas</h3>
     <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
-        Subject areas that make up less than 3% of your collection.
+        These subject areas each make up less than 3% of your total collection.
+        A red badge means less than 1% &mdash; that area is especially thin.
     </p>
     <table>
         <thead>
@@ -48,7 +71,8 @@
 <div class="card">
     <h3>Subjects Lacking Recent Material</h3>
     <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
-        Subject areas with fewer than 5 items published in the last 5 years.
+        These subject areas have fewer than 5 items published in the last 5 years.
+        This may mean patrons can't find current information in these areas.
     </p>
     <table>
         <thead>
@@ -83,7 +107,9 @@
 <div class="card">
     <h3>Aging Subject Areas</h3>
     <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
-        Subjects where the median publication year is more than 15 years old.
+        In these subjects, the typical (median) item was published more than 15 years ago.
+        This can be especially problematic in fast-moving fields like technology, medicine,
+        or law, where outdated materials may contain inaccurate information.
     </p>
     <table>
         <thead>
@@ -112,8 +138,12 @@
 <div class="card">
     <h3>Non-Circulating Items</h3>
     <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
-        {{ "{:,}".format(gaps.low_circulation.count) }} items ({{ gaps.low_circulation.percentage }}% of collection)
-        have never been checked out.
+        {{ "{:,}".format(gaps.low_circulation.count) }} items
+        ({{ gaps.low_circulation.percentage }}% of your collection)
+        have never been checked out. This doesn't necessarily mean they should be removed
+        &mdash; some reference materials, new arrivals, or niche items may simply not have
+        circulated yet. But a high percentage here can indicate items that aren't meeting
+        patron needs.
     </p>
     {% if gaps.low_circulation.sample %}
     <table>
@@ -139,7 +169,8 @@
         </tbody>
     </table>
     <p style="color: var(--gray-600); font-size: 13px; margin-top: 8px;">
-        Showing first 20 items. See the Weeding Candidates report for the full list.
+        Showing first 20 items. For the full list with age and checkout data, see the
+        <a href="{{ url_for('weeding') }}">Weeding Candidates</a> report.
     </p>
     {% endif %}
 </div>
@@ -147,7 +178,10 @@
 
 {% if not gaps %}
 <div class="alert alert-info">
-    Not enough data to detect gaps. Ensure your export includes call numbers and publication years.
+    Not enough data to detect gaps. Make sure your export includes
+    <strong>Call Number</strong> and <strong>Publication Year</strong> columns.
+    Check the <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page
+    to see what was detected.
 </div>
 {% endif %}
 {% endblock %}

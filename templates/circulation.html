@@ -8,6 +8,22 @@
 </div>
 
 {% if circ %}
+<div class="help-box">
+    <strong>What am I looking at?</strong>
+    This report shows how your collection is actually being used. The
+    <strong>Avg per Item</strong> tells you the typical number of checkouts across all items
+    (including items that have never circulated). The <strong>Median</strong> is often more
+    useful because it isn't skewed by a few very popular items &mdash; if the median is 0 or 1,
+    that means the majority of your collection has barely circulated.
+    <br><br>
+    The <strong>Top Circulating Items</strong> list can help you identify titles that may need
+    replacement copies or that indicate strong patron interest in a particular subject.
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_circulation') }}" class="btn-export">Download Top Items CSV</a>
+</div>
+
 <div class="stat-grid">
     <div class="stat-card">
         <div class="label">Total Checkouts</div>
@@ -79,7 +95,9 @@
 
 {% else %}
 <div class="alert alert-info">
-    No checkout data found. Circulation analysis requires checkout counts in your export.
+    No checkout data found. Circulation analysis requires a <strong>Checkouts</strong>
+    (or Total Circs) column in your export. Check the
+    <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to confirm.
 </div>
 {% endif %}
 {% endblock %}

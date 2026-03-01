@@ -8,6 +8,18 @@
 </div>
 
 {% if summary %}
+<div class="help-box">
+    <strong>What am I looking at?</strong>
+    This is a quick snapshot of your entire collection. The numbers below tell you
+    how large your collection is, how old it is on average, and how much it circulates.
+    Use the report links in the sidebar (or the buttons below) to dig deeper into
+    any area.
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_full_catalog') }}" class="btn-export">Download Full Catalog CSV</a>
+</div>
+
 <div class="stat-grid">
     <div class="stat-card">
         <div class="label">Total Items</div>
@@ -54,9 +66,10 @@
 
 <div class="stat-grid">
     <div class="card" style="grid-column: 1 / -1;">
-        <h3>Quick Links</h3>
+        <h3>Where to Start</h3>
         <p style="margin-bottom: 12px; color: var(--gray-600); font-size: 14px;">
-            Jump to a report to find actionable insights about your collection.
+            Not sure where to begin? <strong>Collection Gaps</strong> is usually the most
+            useful report &mdash; it shows you exactly where the holes are.
         </p>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="{{ url_for('gaps') }}" class="btn">Collection Gaps</a>
@@ -72,6 +85,10 @@
     <div class="icon">&#128218;</div>
     <h3>No data loaded yet</h3>
     <p>Upload a CSV or Excel export from your ILS to get started.</p>
+    <p style="margin-top: 8px; font-size: 13px;">
+        First time? Check the <a href="{{ url_for('getting_started') }}"><strong>Getting Started</strong></a>
+        guide for a full walkthrough.
+    </p>
     <br>
     <a href="{{ url_for('upload') }}" class="btn">Import Data</a>
 </div>

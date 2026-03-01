@@ -15,6 +15,7 @@
         </div>
         <nav>
             <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('getting_started') }}" class="{% if request.endpoint == 'getting_started' %}active{% endif %}">Getting Started</a>
             <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}active{% endif %}">Import Data</a>
 
             <div class="section-label">Analysis</div>

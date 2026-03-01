@@ -4,11 +4,27 @@
 {% block content %}
 <div class="page-header">
     <h2>Weeding Candidates</h2>
-    <p>Items that may be candidates for deselection based on age and circulation</p>
+    <p>Items that may be ready for deselection based on age and circulation</p>
+</div>
+
+<div class="help-box">
+    <strong>What is weeding?</strong>
+    Weeding (also called deselection) is the process of removing items from your
+    collection that are outdated, damaged, or no longer meeting patron needs. A
+    well-weeded collection is easier to browse and makes room for new, relevant material.
+    <br><br>
+    This report finds items that are <strong>both old AND rarely checked out</strong>.
+    You can adjust the thresholds below to match your library's weeding policy. For example,
+    the CREW method suggests 10 years for science and technology, but history and
+    literature can often stay longer. Use this list as a starting point &mdash; always review
+    items individually before withdrawing them.
 </div>
 
 <div class="card">
     <h3>Filter Criteria</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+        Adjust these numbers to match your library's weeding policy, then click Update.
+    </p>
     <form class="inline-form" method="GET">
         <label>Older than</label>
         <input type="number" name="age" value="{{ age_threshold }}" min="1" max="100"> years
@@ -19,11 +35,15 @@
 </div>
 
 {% if candidates %}
+<div class="export-bar">
+    <a href="{{ url_for('export_weeding', age=age_threshold, circ=circ_threshold) }}" class="btn-export">Download Full List CSV</a>
+</div>
+
 <div class="alert alert-warning">
     Found <strong>{{ "{:,}".format(total_candidates) }}</strong> potential weeding candidates
     out of {{ "{:,}".format(total_items) }} total items
     ({{ (total_candidates / total_items * 100) | round(1) }}%).
-    {% if total_candidates > 200 %}Showing first 200.{% endif %}
+    {% if total_candidates > 200 %}Showing first 200. Download the CSV to get the complete list.{% endif %}
 </div>
 
 <div class="card">
@@ -57,7 +77,8 @@
 </div>
 {% else %}
 <div class="alert alert-info">
-    No weeding candidates found with the current criteria. Try adjusting the thresholds above.
+    No weeding candidates found with the current criteria. Try lowering the age or
+    checkout thresholds above.
 </div>
 {% endif %}
 {% endblock %}

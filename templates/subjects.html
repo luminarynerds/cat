@@ -4,10 +4,28 @@
 {% block content %}
 <div class="page-header">
     <h2>Subject Balance</h2>
-    <p>Distribution of items across LC classification subject areas</p>
+    <p>Distribution of items across broad subject areas</p>
 </div>
 
 {% if subjects %}
+<div class="help-box">
+    <strong>How to read this report:</strong>
+    Each bar represents a broad subject area based on the letters at the start of your
+    call numbers (using the Library of Congress classification system). The longer the
+    bar, the more items you have in that area. A balanced collection doesn't mean every
+    bar is the same size &mdash; Literature (P) is usually the largest section for public
+    libraries, for example. What you're looking for are areas that seem surprisingly
+    small or surprisingly large for your community's needs.
+    <br><br>
+    The <strong>Avg Checkouts</strong> column shows how much each subject area is actually
+    being used. A small section with high checkouts may mean patron demand is outpacing
+    your holdings.
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_subjects') }}" class="btn-export">Download CSV</a>
+</div>
+
 <div class="card">
     <h3>Subject Distribution</h3>
     <div class="bar-chart">
@@ -50,7 +68,9 @@
 </div>
 {% else %}
 <div class="alert alert-info">
-    No call number data found. Subject analysis requires call numbers in your export.
+    No call number data found. Subject analysis requires <strong>Call Number</strong>
+    values in your export. Check the
+    <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to confirm.
 </div>
 {% endif %}
 {% endblock %}

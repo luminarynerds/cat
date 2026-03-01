@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Getting Started — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Getting Started</h2>
+    <p>New here? This page walks you through everything step by step.</p>
+</div>
+
+<div class="help-box">
+    <strong>What is this tool?</strong><br>
+    This app helps you understand what your library owns, spot gaps where you might
+    need more books, and find items that may be ready to weed &mdash; all without connecting
+    to your ILS. You just upload a report file (CSV or Excel) that you've already
+    pulled from your catalog system, and the tool does the rest.
+</div>
+
+<div class="card">
+    <h3>How It Works</h3>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number {% if has_data %}done{% endif %}">1</div>
+            <div class="step-content">
+                <h4>Pull a report from your ILS</h4>
+                <p>
+                    In your catalog system (Sierra, Polaris, Koha, Evergreen, or any other ILS),
+                    run a report of all items held at your library. Export it as a
+                    <strong>CSV</strong> or <strong>Excel</strong> file. Most systems have a
+                    "Create Lists" or "Reports" module that can do this.
+                </p>
+                <p style="margin-top: 8px;">
+                    <strong>Tip:</strong> The more fields you include, the better the analysis.
+                    At minimum, try to include <strong>Title</strong>, <strong>Call Number</strong>,
+                    and <strong>Publication Year</strong>. If you can also include
+                    <strong>Checkouts</strong> (circulation count) and <strong>Format</strong>
+                    (material type), you'll unlock even more reports.
+                </p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number {% if has_data %}done{% endif %}">2</div>
+            <div class="step-content">
+                <h4>Upload the file here</h4>
+                <p>
+                    Go to the <a href="{{ url_for('upload') }}"><strong>Import Data</strong></a>
+                    page and upload your CSV or Excel file. The tool automatically figures out
+                    which columns are which &mdash; it understands dozens of common column name
+                    variations from different ILS systems. You do <em>not</em> need to rename
+                    your columns first.
+                </p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Explore the reports</h4>
+                <p>
+                    Once your data is loaded, every report in the sidebar lights up. Here's what
+                    each one tells you:
+                </p>
+                <ul style="margin-top: 8px; color: var(--gray-700);">
+                    <li><strong>Dashboard</strong> &mdash; A quick snapshot: how many items you have,
+                        how old they are on average, and how many have never been checked out.</li>
+                    <li><strong>Collection Gaps</strong> &mdash; The main event! Shows you which subject
+                        areas are thin, which ones haven't had new material added recently, and
+                        which areas are getting old.</li>
+                    <li><strong>Subject Balance</strong> &mdash; A visual bar chart showing how your
+                        collection is distributed across broad subject areas (like Science, History,
+                        Literature, etc.).</li>
+                    <li><strong>Age Distribution</strong> &mdash; How many items you have from each
+                        decade. Helps you see if your collection is skewing too old overall.</li>
+                    <li><strong>Format Breakdown</strong> &mdash; Shows the split between books,
+                        DVDs, audiobooks, and other formats, plus which formats get checked out most.</li>
+                    <li><strong>Usage Analysis</strong> &mdash; Your most popular items and
+                        circulation patterns by format.</li>
+                    <li><strong>Weeding Candidates</strong> &mdash; Items that are both old
+                        <em>and</em> rarely checked out. You can adjust the age and checkout
+                        thresholds to match your library's weeding policy.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Export your results</h4>
+                <p>
+                    Every report page has a <strong>Download CSV</strong> button so you can save
+                    the data to a spreadsheet. This is handy for sharing results with your
+                    director, building a purchasing list, or keeping records of weeding decisions.
+                    You can also use <strong>Ctrl+P</strong> (or Cmd+P on Mac) to print any page
+                    &mdash; the sidebar and buttons will be hidden automatically.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Frequently Asked Questions</h3>
+    <div class="steps">
+        <div class="step" style="border-bottom: 1px solid var(--gray-100);">
+            <div class="step-content">
+                <h4>Does this connect to my ILS?</h4>
+                <p>No. It works entirely with files you've already exported. Your data stays on
+                    your computer and is never sent anywhere.</p>
+            </div>
+        </div>
+        <div class="step" style="border-bottom: 1px solid var(--gray-100);">
+            <div class="step-content">
+                <h4>What if my column names are different?</h4>
+                <p>The tool recognizes many common variations (like "Pub Year", "Publication Year",
+                    "Year", "Date", etc.). After uploading, check the
+                    <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to see
+                    what was detected. If a field shows as "Empty", it means your file either
+                    doesn't have that data or uses a column name the tool didn't recognize &mdash;
+                    that's OK, the reports just adapt to what's available.</p>
+            </div>
+        </div>
+        <div class="step" style="border-bottom: 1px solid var(--gray-100);">
+            <div class="step-content">
+                <h4>What does "LC classification" mean?</h4>
+                <p>The Library of Congress (LC) classification system assigns letter codes to
+                    broad subject areas. For example, "P" = Language &amp; Literature, "Q" = Science,
+                    "H" = Social Sciences. The tool reads the letters at the start of your call
+                    numbers to figure out what subject area each item belongs to. It also works
+                    with Dewey Decimal call numbers by mapping the first digit to the equivalent
+                    LC area.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-content">
+                <h4>Can I upload a new file to replace the old one?</h4>
+                <p>Yes! Just go to Import Data and upload a new file. It replaces the previous
+                    data immediately. This is useful for comparing your collection over time &mdash;
+                    export a CSV now, export another one in six months, and see how things changed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not has_data %}
+<div style="text-align: center; padding: 20px 0;">
+    <a href="{{ url_for('upload') }}" class="btn">Upload Your First File</a>
+</div>
+{% endif %}
+{% endblock %}

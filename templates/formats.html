@@ -8,6 +8,19 @@
 </div>
 
 {% if formats %}
+<div class="help-box">
+    <strong>Why does format matter?</strong>
+    Different patron groups prefer different formats. Audiobooks and large print serve
+    commuters and visually impaired patrons. DVDs may still circulate well or may be
+    declining in your community. Comparing the <strong>Avg Checkouts</strong> across
+    formats helps you see which formats are actually getting used &mdash; and which might
+    be worth investing in (or phasing out).
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_formats') }}" class="btn-export">Download CSV</a>
+</div>
+
 <div class="card">
     <h3>Format Distribution</h3>
     <div class="bar-chart">
@@ -49,7 +62,8 @@
 </div>
 {% else %}
 <div class="alert alert-info">
-    No format/material type data found in your export.
+    No format/material type data found in your export. Check the
+    <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to confirm.
 </div>
 {% endif %}
 {% endblock %}

@@ -1,9 +1,13 @@
 """Library Collection Analyzer — local Flask web application."""
 
+import csv
+import io
 import os
 import json
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import (
+    Flask, render_template, request, redirect, url_for, flash, Response,
+)
 import pandas as pd
 
 from importer import import_catalog, LC_CLASS_LABELS
@@ -197,6 +201,149 @@ def weeding():
         age_threshold=age_thresh,
         circ_threshold=circ_thresh,
         filename=_current_filename,
+    )
+
+
+@app.route("/getting-started")
+def getting_started():
+    return render_template(
+        "getting_started.html",
+        has_data=get_df() is not None,
+        filename=_current_filename,
+    )
+
+
+# ---------------------------------------------------------------------------
+# CSV Export routes
+# ---------------------------------------------------------------------------
+
+def _csv_response(rows: list[dict], filename: str) -> Response:
+    """Build a CSV download response from a list of dicts."""
+    if not rows:
+        return Response("No data to export.\n", mimetype="text/plain")
+
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=rows[0].keys())
+    writer.writeheader()
+    writer.writerows(rows)
+
+    return Response(
+        buf.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.route("/export/subjects")
+def export_subjects():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    return _csv_response(subject_balance(df), "subject_balance.csv")
+
+
+@app.route("/export/age")
+def export_age():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    return _csv_response(age_distribution(df), "age_distribution.csv")
+
+
+@app.route("/export/formats")
+def export_formats():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    return _csv_response(format_breakdown(df), "format_breakdown.csv")
+
+
+@app.route("/export/circulation")
+def export_circulation():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    data = circulation_analysis(df)
+    # Export the top items list (most useful for sharing)
+    return _csv_response(data.get("top_items", []), "top_circulating_items.csv")
+
+
+@app.route("/export/weeding")
+def export_weeding():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    age_thresh = request.args.get("age", 15, type=int)
+    circ_thresh = request.args.get("circ", 2, type=int)
+    candidates = weeding_candidates(df, age_thresh, circ_thresh)
+    return _csv_response(candidates.fillna("").to_dict("records"), "weeding_candidates.csv")
+
+
+@app.route("/export/gaps")
+def export_gaps():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    gap_data = find_gaps(df)
+    # Combine all gap types into one export with a "gap_type" column
+    rows = []
+    for item in gap_data.get("underrepresented_subjects", []):
+        rows.append({
+            "gap_type": "Underrepresented Subject",
+            "subject_class": item.get("broad_class", ""),
+            "subject_label": item.get("label", ""),
+            "detail": f"{item.get('count', '')} items ({item.get('percentage', '')}%)",
+            "avg_checkouts": item.get("avg_checkouts", ""),
+        })
+    for item in gap_data.get("missing_recent", []):
+        rows.append({
+            "gap_type": "Missing Recent Material",
+            "subject_class": item.get("broad_class", ""),
+            "subject_label": item.get("label", ""),
+            "detail": f"{item.get('recent_count', '')} items in last 5 years",
+            "avg_checkouts": "",
+        })
+    for item in gap_data.get("aging_areas", []):
+        rows.append({
+            "gap_type": "Aging Area",
+            "subject_class": item.get("broad_class", ""),
+            "subject_label": item.get("label", ""),
+            "detail": f"Median pub year {int(item.get('pub_year', 0))}, "
+                       f"median age {int(item.get('median_age', 0))} yrs",
+            "avg_checkouts": "",
+        })
+    if gap_data.get("low_circulation"):
+        lc = gap_data["low_circulation"]
+        rows.append({
+            "gap_type": "Low Circulation Summary",
+            "subject_class": "",
+            "subject_label": "",
+            "detail": f"{lc['count']} items never circulated ({lc['percentage']}%)",
+            "avg_checkouts": "",
+        })
+    return _csv_response(rows, "collection_gaps.csv")
+
+
+@app.route("/export/full-catalog")
+def export_full_catalog():
+    """Export the full imported dataset back as CSV."""
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    return Response(
+        buf.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=full_catalog_export.csv"},
     )
 
 

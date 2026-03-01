@@ -7,13 +7,27 @@
     <p>Upload a CSV or Excel file exported from your ILS</p>
 </div>
 
+<div class="help-box">
+    <strong>How do I get this file?</strong>
+    In your ILS (Sierra, Polaris, Koha, Evergreen, etc.), go to the Reports or
+    Create Lists area and pull a list of all items at your branch. Then export/download
+    that list as a CSV or Excel file. If you're not sure how, ask your consortium's
+    system administrator &mdash; they can usually generate one for you.
+    <ul>
+        <li>The file should have <strong>one row per item</strong> (or one row per bib record).</li>
+        <li>Include as many columns as possible &mdash; the tool automatically matches them.</li>
+        <li>At minimum, include <strong>Title</strong>, <strong>Call Number</strong>, and <strong>Publication Year</strong>.</li>
+        <li>For circulation reports, also include a <strong>Checkouts</strong> (or Total Circs) column.</li>
+    </ul>
+</div>
+
 <div class="card">
     <h3>Upload File</h3>
     <form method="POST" enctype="multipart/form-data">
         <div class="upload-area">
-            <p><strong>Select a catalog export file</strong></p>
+            <p><strong>Select your catalog export file</strong></p>
             <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
-                Supported formats: CSV (.csv), Excel (.xlsx, .xls)
+                Accepted formats: CSV (.csv), Excel (.xlsx, .xls)
             </p>
             <input type="file" name="file" accept=".csv,.xlsx,.xls">
             <br><br>
@@ -23,10 +37,42 @@
 </div>
 
 <div class="card">
+    <h3>What Happens After Upload?</h3>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Column matching</h4>
+                <p>The tool scans your column headers and matches them to standard fields
+                    (Title, Author, Call Number, etc.). It understands dozens of common
+                    variations, so you don't need to rename anything.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Data cleanup</h4>
+                <p>Publication years, checkout counts, and dates are automatically cleaned up
+                    and converted to the right format. For example, "c2019" or "2019." both
+                    become 2019.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Subject classification</h4>
+                <p>Call numbers are read to determine the subject area of each item.
+                    This works with both Library of Congress (LC) and Dewey Decimal call numbers.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
     <h3>Supported Column Names</h3>
     <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 12px;">
-        The analyzer automatically recognizes common ILS export column names.
-        Your file does not need to have all of these — the tool works with whatever data you have.
+        Your file does <strong>not</strong> need all of these. The tool works with whatever
+        data you have and skips fields that are missing.
     </p>
     <table>
         <thead>

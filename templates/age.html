@@ -8,6 +8,22 @@
 </div>
 
 {% if distribution %}
+<div class="help-box">
+    <strong>What does this tell me?</strong>
+    This chart shows how many items you have from each decade. A healthy collection
+    typically has a strong showing in the most recent decades, with older decades
+    tapering off &mdash; though this depends on your library's focus. If you see a huge
+    spike in the 1990s but very little from the 2020s, that's a sign that new material
+    hasn't been replacing aging stock.
+    <br><br>
+    The <strong>Avg Checkouts</strong> column can be revealing: if older decades have
+    very low average checkouts, those items may be sitting on shelves unused.
+</div>
+
+<div class="export-bar">
+    <a href="{{ url_for('export_age') }}" class="btn-export">Download CSV</a>
+</div>
+
 <div class="card">
     <h3>Items by Decade</h3>
     <div class="bar-chart">
@@ -49,7 +65,9 @@
 </div>
 {% else %}
 <div class="alert alert-info">
-    No publication year data found. Age analysis requires publication years in your export.
+    No publication year data found. Age analysis requires <strong>Publication Year</strong>
+    values in your export. Check the
+    <a href="{{ url_for('column_mapping') }}">Column Mapping</a> page to confirm.
 </div>
 {% endif %}
 {% endblock %}

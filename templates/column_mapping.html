@@ -4,14 +4,26 @@
 {% block content %}
 <div class="page-header">
     <h2>Column Mapping</h2>
-    <p>How your data fields were mapped from the uploaded file</p>
+    <p>How your data fields were detected from the uploaded file</p>
+</div>
+
+<div class="help-box">
+    <strong>What is this page?</strong>
+    When you uploaded your file, the tool tried to match your column headers to the
+    fields it knows how to analyze. This page shows you the results. A
+    <span class="gap-badge low" style="vertical-align: middle;">Full</span> badge means
+    almost every row has data for that field. A
+    <span class="gap-badge high" style="vertical-align: middle;">Empty</span> badge means
+    your file didn't include that data (or used a column name the tool didn't recognize).
+    <br><br>
+    <strong>Empty fields are totally fine</strong> &mdash; the reports simply skip any
+    analysis that requires missing data. For the richest analysis, the most important
+    fields are <strong>Call Number</strong>, <strong>Publication Year</strong>, and
+    <strong>Checkouts</strong>.
 </div>
 
 <div class="card">
     <h3>Detected Fields</h3>
-    <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 16px;">
-        Green = fully populated, yellow = partially populated, gray = no data found.
-    </p>
     <table>
         <thead>
             <tr>
@@ -49,11 +61,5 @@
             {% endfor %}
         </tbody>
     </table>
-</div>
-
-<div class="alert alert-info">
-    Empty fields are normal — the analysis adapts to whatever data is available.
-    For the best gap analysis, ensure at least <strong>Call Number</strong> and
-    <strong>Publication Year</strong> are present.
 </div>
 {% endblock %}
