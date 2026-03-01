@@ -42,6 +42,36 @@ def get_df() -> pd.DataFrame | None:
     return _current_df
 
 
+LAST_UPLOAD_PATH = os.path.join(UPLOAD_DIR, ".last_upload.json")
+
+
+def _save_last_upload(filename: str, row_count: int) -> None:
+    """Record the last successful upload for reload-on-restart."""
+    from datetime import datetime
+    meta = {
+        "filename": filename,
+        "uploaded_at": datetime.now().isoformat(),
+        "row_count": row_count,
+    }
+    with open(LAST_UPLOAD_PATH, "w") as f:
+        json.dump(meta, f)
+
+
+def _check_last_upload() -> dict | None:
+    """Check if a previous upload is available for reloading."""
+    if not os.path.exists(LAST_UPLOAD_PATH):
+        return None
+    try:
+        with open(LAST_UPLOAD_PATH) as f:
+            meta = json.load(f)
+        filepath = os.path.join(UPLOAD_DIR, meta["filename"])
+        if not os.path.exists(filepath):
+            return None
+        return meta
+    except (json.JSONDecodeError, KeyError):
+        return None
+
+
 @app.route("/")
 def index():
     df = get_df()
@@ -76,6 +106,7 @@ def upload():
         try:
             _current_df = import_catalog(filepath)
             _current_filename = file.filename
+            _save_last_upload(file.filename, len(_current_df))
             flash(
                 f"Imported {len(_current_df)} items from {file.filename}.",
                 "success",
