@@ -428,6 +428,30 @@ tbody tr:hover {
 .help-toggle:hover { background: var(--gray-100); }
 .help-body.collapsed { display: none; }
 
+/* Jargon tooltips */
+.jargon {
+    text-decoration: underline dotted var(--gray-400);
+    cursor: help;
+    position: relative;
+}
+.jargon:hover::after,
+.jargon:focus::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gray-800);
+    color: #fff;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    max-width: 260px;
+    white-space: normal;
+    z-index: 100;
+    pointer-events: none;
+}
+
 /* Step indicator for getting-started / upload walkthrough */
 .steps {
     display: flex;
