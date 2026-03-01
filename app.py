@@ -213,6 +213,9 @@ def upload():
                 f"Imported {len(_current_df)} items from {file.filename}.",
                 "success",
             )
+            if _data_quality["has_issues"]:
+                for issue in _data_quality["issues"]:
+                    flash(issue, "warning")
         except Exception as e:
             flash(f"Error importing file: {e}", "error")
             return redirect(url_for("upload"))
