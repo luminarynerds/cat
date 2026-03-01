@@ -227,7 +227,17 @@ def gaps():
     df, audience_filter = _apply_audience_filter(df)
 
     gap_data = find_gaps(df)
-    return render_template("gaps.html", gaps=gap_data, filename=_current_filename, audience_filter=audience_filter)
+
+    # Detect dominant classification system
+    class_system = "LC"
+    if "classification_system" in df.columns:
+        lc = int((df["classification_system"] == "LC").sum())
+        dw = int((df["classification_system"] == "Dewey").sum())
+        if dw > lc:
+            class_system = "Dewey"
+
+    return render_template("gaps.html", gaps=gap_data, filename=_current_filename,
+                           audience_filter=audience_filter, class_system=class_system)
 
 
 @app.route("/subjects")
@@ -477,10 +487,19 @@ def freshness():
     df, audience_filter = _apply_audience_filter(df)
 
     data = collection_freshness(df)
+
+    # Detect dominant classification system
+    class_system = "LC"
+    if "classification_system" in df.columns:
+        lc = int((df["classification_system"] == "LC").sum())
+        dw = int((df["classification_system"] == "Dewey").sum())
+        if dw > lc:
+            class_system = "Dewey"
+
     return render_template(
         "freshness.html", freshness=data,
         chart_data=json.dumps(data), filename=_current_filename,
-        audience_filter=audience_filter,
+        audience_filter=audience_filter, class_system=class_system,
     )
 
 

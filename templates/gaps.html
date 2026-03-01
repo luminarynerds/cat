@@ -12,7 +12,7 @@
     <strong>What does this page show?</strong>
     Subject areas where your collection might be thin compared to others. A "gap" means
     you have fewer items in a
-    <span class="jargon" data-tip="Library of Congress classification - a system that organizes books by subject using letter codes">LC class</span>
+    <span class="jargon" data-tip="A system that organizes books by subject using {{ 'number codes (000-999)' if class_system == 'Dewey' else 'letter codes (A-Z)' }}">{{ 'Dewey range' if class_system == 'Dewey' else 'LC class' }}</span>
     than the overall average.
     <br><br>
     Not every gap is a problem - a small public library doesn't need a deep law collection.
@@ -37,7 +37,7 @@
     <table>
         <thead>
             <tr>
-                <th>Class</th>
+                <th>{{ 'Range' if class_system == 'Dewey' else 'Class' }}</th>
                 <th>Subject</th>
                 <th>Items</th>
                 <th>% of Collection</th>
@@ -77,7 +77,7 @@
     <table>
         <thead>
             <tr>
-                <th>Class</th>
+                <th>{{ 'Range' if class_system == 'Dewey' else 'Class' }}</th>
                 <th>Subject</th>
                 <th>Recent Items (last 5 yrs)</th>
                 <th>Severity</th>
@@ -116,7 +116,7 @@
     <table>
         <thead>
             <tr>
-                <th>Class</th>
+                <th>{{ 'Range' if class_system == 'Dewey' else 'Class' }}</th>
                 <th>Subject</th>
                 <th>Median Pub Year</th>
                 <th>Median Age</th>
