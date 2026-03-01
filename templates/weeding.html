@@ -57,6 +57,8 @@
                 <th>Pub Year</th>
                 <th>Age</th>
                 <th>Checkouts</th>
+                <th>Price</th>
+                <th>$/Circ</th>
                 <th>Format</th>
             </tr>
         </thead>
@@ -69,6 +71,8 @@
                 <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
                 <td>{{ item.age | int }} yrs</td>
                 <td>{{ item.checkouts | int if item.checkouts else 0 }}</td>
+                <td>{{ "${:,.2f}".format(item.price) if item.price else "" }}</td>
+                <td>{{ "${:,.2f}".format(item.cost_per_circ) if item.cost_per_circ else "" }}</td>
                 <td>{{ item.format }}</td>
             </tr>
             {% endfor %}

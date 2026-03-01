@@ -107,6 +107,8 @@
                 <th>Year</th>
                 <th>Age</th>
                 <th>Circ</th>
+                <th>Price</th>
+                <th>$/Circ</th>
                 <th>Format</th>
                 <th>Max Age</th>
             </tr>
@@ -127,6 +129,8 @@
                 <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
                 <td>{{ item.age | int if item.age else "" }}</td>
                 <td>{{ item.checkouts | int if item.checkouts else 0 }}</td>
+                <td>{{ "${:,.2f}".format(item.price|float) if item.price else "" }}</td>
+                <td>{{ "${:,.2f}".format(item.cost_per_circ|float) if item.cost_per_circ else "" }}</td>
                 <td>{{ item.format }}</td>
                 <td>{{ item.subject_max_age }} yrs</td>
             </tr>
