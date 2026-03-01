@@ -51,7 +51,7 @@
 </div>
 
 {% for cat in audit.categories %}
-{% if cat.items %}
+{% if cat['items'] %}
 <div class="card">
     <h3>{{ cat.name }}: {{ cat.description }} ({{ cat.count }} items)</h3>
     {% if cat.by_audience %}
@@ -71,7 +71,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in cat.items[:20] %}
+            {% for item in cat['items'][:20] %}
             <tr>
                 <td>{{ item.title }}</td>
                 <td>{{ item.author }}</td>
