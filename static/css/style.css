@@ -380,6 +380,15 @@ tbody tr:hover {
 .col-status.partial { background: #ecc94b; }
 .col-status.empty { background: #e2e8f0; }
 
+.status-label {
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+    margin-right: 0.5rem;
+}
+.status-label.mapped { color: #276749; }
+.status-label.partial { color: #975a16; }
+.status-label.unmapped { color: var(--gray-500); }
+
 /* Help / explainer boxes */
 .help-box {
     background: var(--primary-light);

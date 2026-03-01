@@ -38,11 +38,11 @@
             <tr>
                 <td>
                     {% if col.percentage >= 90 %}
-                    <span class="col-status full"></span>
+                    <span class="col-status full"></span><span class="status-label mapped">Mapped</span>
                     {% elif col.percentage > 0 %}
-                    <span class="col-status partial"></span>
+                    <span class="col-status partial"></span><span class="status-label partial">Partial</span>
                     {% else %}
-                    <span class="col-status empty"></span>
+                    <span class="col-status empty"></span><span class="status-label unmapped">Not found</span>
                     {% endif %}
                     {{ col.column }}
                 </td>
