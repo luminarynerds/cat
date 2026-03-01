@@ -32,6 +32,11 @@ def collection_summary(df: pd.DataFrame) -> dict:
             if "checkouts" in df.columns
             else None
         ),
+        "audience_breakdown": (
+            df["audience"].value_counts().to_dict()
+            if "audience" in df.columns
+            else {}
+        ),
     }
 
 

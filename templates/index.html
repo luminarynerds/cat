@@ -64,6 +64,18 @@
     </div>
 </div>
 
+{% if summary.audience_breakdown %}
+<div class="stat-grid">
+    {% for aud, count in summary.audience_breakdown.items() %}
+    <div class="stat-card">
+        <div class="label">{{ aud }}</div>
+        <div class="value">{{ "{:,}".format(count) }}</div>
+        <div class="detail">{{ (count / summary.total_items * 100) | round(1) }}% of collection</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="stat-grid">
     <div class="card" style="grid-column: 1 / -1;">
         <h3>Where to Start</h3>
