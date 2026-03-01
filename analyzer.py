@@ -577,3 +577,106 @@ def flag_banned_books(df: pd.DataFrame) -> pd.DataFrame:
     if not results:
         return pd.DataFrame()
     return pd.DataFrame(results)
+
+
+# Representation keyword categories for diversity audit.
+DIVERSITY_CATEGORIES: dict[str, dict] = {
+    "LGBTQ+": {
+        "keywords": ["gay", "lesbian", "transgender", "queer", "nonbinary",
+                     "sexual minorities", "gender identity", "bisexual",
+                     "lgbtq", "same-sex", "homosexual"],
+        "description": "LGBTQ+ representation",
+    },
+    "Disability": {
+        "keywords": ["disabilities", "deaf", "blind", "autism", "neurodivergent",
+                     "accessibility", "mental health", "wheelchair", "adhd",
+                     "dyslexia", "chronic illness", "disability"],
+        "description": "Disability representation",
+    },
+    "Cultural/Ethnic": {
+        "keywords": ["african american", "latino", "latina", "latinx", "indigenous",
+                     "native american", "asian american", "immigration", "multicultural",
+                     "hispanic", "black american", "chicano", "pacific islander",
+                     "middle eastern", "arab american"],
+        "description": "Cultural and ethnic diversity",
+    },
+    "Languages": {
+        "keywords": ["spanish language", "bilingual", "french language",
+                     "chinese language", "arabic language", "multilingual",
+                     "esl", "english as a second"],
+        "description": "Non-English and multilingual materials",
+    },
+    "Religion": {
+        "keywords": ["christianity", "islam", "judaism", "buddhism", "hinduism",
+                     "religion", "spiritual", "atheism", "secular", "muslim",
+                     "jewish", "christian", "sikh"],
+        "description": "Religious and worldview diversity",
+    },
+}
+
+
+def diversity_audit(df: pd.DataFrame) -> dict:
+    """Audit collection for representation across diversity categories.
+
+    Scans subject headings for representation keywords. This is an
+    approximation -- not all diverse books have obvious subject headings.
+    """
+    if "subject" not in df.columns or df["subject"].isna().all():
+        return {"has_data": False, "categories": [], "gaps": []}
+
+    total = len(df)
+    categories = []
+    gaps = []
+
+    for cat_name, cat_info in DIVERSITY_CATEGORIES.items():
+        pattern = "|".join(re.escape(kw) for kw in cat_info["keywords"])
+        mask = df["subject"].fillna("").str.lower().str.contains(pattern, regex=True)
+        matched = df[mask]
+        count = len(matched)
+        pct = round(count / total * 100, 2) if total else 0
+
+        cat_result = {
+            "name": cat_name,
+            "description": cat_info["description"],
+            "count": count,
+            "percentage": pct,
+            "items": matched.head(50)[
+                ["title", "author", "subject", "pub_year", "format"]
+                + (["audience"] if "audience" in df.columns else [])
+            ].fillna("").to_dict("records"),
+        }
+
+        if "audience" in matched.columns and len(matched) > 0:
+            cat_result["by_audience"] = matched["audience"].value_counts().to_dict()
+
+        if matched["pub_year"].notna().any():
+            cat_result["avg_pub_year"] = int(matched["pub_year"].mean())
+
+        categories.append(cat_result)
+
+        if count == 0:
+            gaps.append({"category": cat_name, "description": cat_info["description"],
+                         "severity": "none", "message": f"No items found with {cat_name}-related subjects."})
+        elif pct < 0.5:
+            gaps.append({"category": cat_name, "description": cat_info["description"],
+                         "severity": "low", "message": f"Very few items ({count}) with {cat_name}-related subjects."})
+
+        if "audience" in df.columns:
+            for aud in ["Adult", "YA", "Juvenile"]:
+                aud_df = df[df["audience"] == aud]
+                if len(aud_df) == 0:
+                    continue
+                aud_matched = aud_df[aud_df["subject"].fillna("").str.lower().str.contains(pattern, regex=True)]
+                if len(aud_matched) == 0:
+                    gaps.append({
+                        "category": cat_name,
+                        "severity": "audience_gap",
+                        "message": f"Your {aud} collection has 0 items with {cat_name}-related subjects.",
+                    })
+
+    return {
+        "has_data": True,
+        "total_items": total,
+        "categories": categories,
+        "gaps": gaps,
+    }
