@@ -672,6 +672,38 @@ def export_weeding():
     return _csv_response(candidates.fillna("").to_dict("records"), "weeding_candidates.csv")
 
 
+@app.route("/export/pull-list")
+def export_pull_list():
+    """Export a shelf-walk pull list sorted by call number."""
+    df = get_df()
+    if df is None:
+        return "No data loaded.", 400
+    df, _ = _apply_audience_filter(df)
+
+    source = request.args.get("source", "weeding")
+    if source == "mustie":
+        from mustie import apply_mustie, get_default_thresholds
+        thresholds = _custom_thresholds if _custom_thresholds else get_default_thresholds()
+        candidates = apply_mustie(df, thresholds)
+    else:
+        age_thresh = request.args.get("age", 15, type=int)
+        circ_thresh = request.args.get("circ", 2, type=int)
+        candidates = weeding_candidates(df, age_thresh, circ_thresh)
+
+    if candidates is None or len(candidates) == 0:
+        return "No candidates to export.", 400
+
+    # Select pull-list columns and sort by call number
+    cols = ["call_number", "title", "author"]
+    if "location" in candidates.columns:
+        cols.insert(1, "location")
+
+    pull = candidates[cols].copy()
+    pull = pull.sort_values("call_number", na_position="last")
+    rows = pull.fillna("").to_dict("records")
+    return _csv_response(rows, "pull-list.csv")
+
+
 @app.route("/export/gaps")
 def export_gaps():
     df = get_df()
