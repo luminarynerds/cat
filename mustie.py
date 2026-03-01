@@ -82,6 +82,12 @@ def apply_mustie(df: pd.DataFrame,
     current_year = datetime.now().year
     result = df.copy()
 
+    # Exclude digital items — they can't be physically weeded
+    if "is_digital" in result.columns:
+        result = result[~result["is_digital"]].copy()
+    if len(result) == 0:
+        return pd.DataFrame()
+
     # Compute derived columns
     result["age"] = current_year - result["pub_year"]
     result["broad_class"] = result["lc_class"].str[0] if result["lc_class"].notna().any() else pd.NA

@@ -214,6 +214,11 @@ def weeding_candidates(df: pd.DataFrame, age_threshold: int = 15,
     Criteria: older than age_threshold years AND fewer than circ_threshold checkouts.
     """
     current_year = datetime.now().year
+
+    # Exclude digital items — they can't be physically weeded
+    if "is_digital" in df.columns:
+        df = df[~df["is_digital"]].copy()
+
     candidates = df[
         (df["pub_year"].notna())
         & (df["pub_year"] <= current_year - age_threshold)
