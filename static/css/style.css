@@ -216,6 +216,19 @@ tbody tr:hover {
 .alert-warning { background: var(--warning-bg); color: var(--warning); }
 .alert-info { background: var(--primary-light); color: var(--primary); }
 
+.dismiss-btn {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: inherit;
+    padding: 0 0.25rem;
+    line-height: 1;
+    opacity: 0.6;
+}
+.dismiss-btn:hover { opacity: 1; }
+
 /* Upload form */
 .upload-area {
     border: 2px dashed var(--gray-300);

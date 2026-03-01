@@ -77,6 +77,16 @@
 </div>
 {% endif %}
 
+<div class="alert alert-info persistence-warning" id="persistence-warning">
+    <strong>Heads up:</strong> Your data is stored in memory only for this session.
+    If you close the browser or restart the app, you will need to reload your file.
+    {% if filename %}
+    The app remembers your last file (<em>{{ filename }}</em>) so you can reload it
+    with one click from this page.
+    {% endif %}
+    <button type="button" class="dismiss-btn" onclick="this.parentElement.style.display='none';sessionStorage.setItem('hidePersistenceWarning','1')" aria-label="Dismiss">&times;</button>
+</div>
+
 <div class="stat-grid">
     <div class="card" style="grid-column: 1 / -1;">
         <h3>Where to Start</h3>
@@ -118,4 +128,13 @@
     <a href="{{ url_for('upload') }}" class="btn">Import Data</a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+if (sessionStorage.getItem('hidePersistenceWarning') === '1') {
+    var w = document.getElementById('persistence-warning');
+    if (w) w.style.display = 'none';
+}
+</script>
 {% endblock %}
