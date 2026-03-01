@@ -43,6 +43,16 @@ def get_df() -> pd.DataFrame | None:
     return _current_df
 
 
+def _apply_audience_filter(df: pd.DataFrame) -> tuple[pd.DataFrame, str | None]:
+    """Filter DataFrame by audience query param if present."""
+    audience = request.args.get("audience")
+    if audience and "audience" in df.columns:
+        filtered = df[df["audience"] == audience]
+        if len(filtered) > 0:
+            return filtered, audience
+    return df, None
+
+
 LAST_UPLOAD_PATH = os.path.join(UPLOAD_DIR, ".last_upload.json")
 
 
@@ -77,7 +87,9 @@ def _check_last_upload() -> dict | None:
 def index():
     df = get_df()
     summary = None
+    audience_filter = None
     if df is not None:
+        df, audience_filter = _apply_audience_filter(df)
         summary = collection_summary(df)
     last_upload = _check_last_upload() if df is None else None
     return render_template(
@@ -85,6 +97,7 @@ def index():
         summary=summary,
         filename=_current_filename,
         last_upload=last_upload,
+        audience_filter=audience_filter,
     )
 
 
@@ -208,9 +221,10 @@ def gaps():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     gap_data = find_gaps(df)
-    return render_template("gaps.html", gaps=gap_data, filename=_current_filename)
+    return render_template("gaps.html", gaps=gap_data, filename=_current_filename, audience_filter=audience_filter)
 
 
 @app.route("/subjects")
@@ -219,6 +233,7 @@ def subjects():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     balance = subject_balance(df)
     return render_template(
@@ -226,6 +241,7 @@ def subjects():
         subjects=balance,
         chart_data=json.dumps(balance),
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -235,6 +251,7 @@ def age():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     dist = age_distribution(df)
     return render_template(
@@ -242,6 +259,7 @@ def age():
         distribution=dist,
         chart_data=json.dumps(dist),
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -251,6 +269,7 @@ def formats():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     data = format_breakdown(df)
     digital = digital_physical_split(df)
@@ -260,6 +279,7 @@ def formats():
         digital=digital,
         chart_data=json.dumps(data),
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -269,12 +289,14 @@ def circulation():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     data = circulation_analysis(df)
     return render_template(
         "circulation.html",
         circ=data,
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -284,6 +306,7 @@ def weeding():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     age_thresh = request.args.get("age", 15, type=int)
     circ_thresh = request.args.get("circ", 2, type=int)
@@ -297,6 +320,7 @@ def weeding():
         age_threshold=age_thresh,
         circ_threshold=circ_thresh,
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -314,6 +338,7 @@ def mustie_weeding():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     thresholds = _custom_thresholds or get_default_thresholds()
 
@@ -328,6 +353,7 @@ def mustie_weeding():
         summary=summary,
         thresholds=thresholds,
         filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -375,6 +401,7 @@ def export_mustie():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, _ = _apply_audience_filter(df)
 
     thresholds = _custom_thresholds or get_default_thresholds()
     flagged = apply_mustie(df, thresholds=thresholds)
@@ -394,12 +421,14 @@ def dormant():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     years = request.args.get("years", 3, type=int)
     data = dormant_items(df, dormant_years=years)
     return render_template(
         "dormant.html", data=data, dormant_years=years,
         total_items=len(df), filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -409,11 +438,13 @@ def duplicates():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     data = find_duplicates(df)
     return render_template(
         "duplicates.html", dupes=data,
         total_items=len(df), filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -423,10 +454,12 @@ def cost():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     data = cost_analysis(df)
     return render_template(
         "cost.html", cost=data, filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -436,11 +469,13 @@ def freshness():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, audience_filter = _apply_audience_filter(df)
 
     data = collection_freshness(df)
     return render_template(
         "freshness.html", freshness=data,
         chart_data=json.dumps(data), filename=_current_filename,
+        audience_filter=audience_filter,
     )
 
 
@@ -569,6 +604,7 @@ def export_weeding():
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
+    df, _ = _apply_audience_filter(df)
     age_thresh = request.args.get("age", 15, type=int)
     circ_thresh = request.args.get("circ", 2, type=int)
     candidates = weeding_candidates(df, age_thresh, circ_thresh)
