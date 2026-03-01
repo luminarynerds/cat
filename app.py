@@ -315,12 +315,17 @@ def mustie_settings():
     if request.method == "POST":
         thresholds = get_default_thresholds()
         for cls in thresholds:
-            age_key = f"age_{cls}"
-            if age_key in request.form:
-                try:
-                    thresholds[cls]["max_age"] = int(request.form[age_key])
-                except ValueError:
-                    pass
+            for field, form_prefix in [
+                ("max_age", "age"),
+                ("max_no_circ_years", "no_circ_years"),
+                ("circ_floor", "circ_floor"),
+            ]:
+                key = f"{form_prefix}_{cls}"
+                if key in request.form:
+                    try:
+                        thresholds[cls][field] = int(request.form[key])
+                    except ValueError:
+                        pass
         _custom_thresholds = thresholds
         flash("MUSTIE thresholds updated.", "success")
         return redirect(url_for("mustie_weeding"))

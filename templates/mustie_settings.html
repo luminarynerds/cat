@@ -25,13 +25,21 @@
 
 <form method="POST">
     <div class="card">
-        <h3>Age Thresholds by Subject</h3>
+        <h3>Thresholds by Subject</h3>
+        <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+            <strong>Max Age</strong> controls the M (Misleading) flag.
+            <strong>Max Dormant</strong> controls how many years with no checkouts before the I flag triggers.
+            <strong>Min Checkouts</strong> is the minimum checkout count below which an item is considered low-circulation.
+        </p>
+        <div style="overflow-x: auto;">
         <table>
             <thead>
                 <tr>
                     <th>Class</th>
                     <th>Subject</th>
-                    <th>Max Age (years)</th>
+                    <th>Max Age (yrs)</th>
+                    <th>Max Dormant (yrs)</th>
+                    <th>Min Checkouts</th>
                     <th>Notes</th>
                 </tr>
             </thead>
@@ -44,6 +52,16 @@
                     <td>
                         <input type="number" name="age_{{ cls }}"
                                value="{{ t.max_age }}" min="1" max="100"
+                               style="width: 70px; padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 14px;">
+                    </td>
+                    <td>
+                        <input type="number" name="no_circ_years_{{ cls }}"
+                               value="{{ t.max_no_circ_years }}" min="1" max="50"
+                               style="width: 70px; padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 14px;">
+                    </td>
+                    <td>
+                        <input type="number" name="circ_floor_{{ cls }}"
+                               value="{{ t.circ_floor }}" min="0" max="100"
                                style="width: 70px; padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 14px;">
                     </td>
                     <td style="font-size: 13px; color: var(--gray-600);">
@@ -61,6 +79,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 
     <div style="display: flex; gap: 10px; align-items: center;">
