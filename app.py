@@ -1,14 +1,17 @@
-"""Library Collection Analyzer — local Flask web application."""
+"""Library Collection Analyzer — Flask web application with multi-user sessions."""
 
 import csv
 import io
 import os
 import json
+import time
+import uuid
+import threading
 from datetime import datetime
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, Response,
-    send_file,
+    send_file, session,
 )
 import pandas as pd
 
@@ -36,23 +39,127 @@ from analyzer import (
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
 
+# ---------------------------------------------------------------------------
+# Stable secret key — persists across restarts
+# ---------------------------------------------------------------------------
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# In-memory store for the current dataset (local single-user app).
-_current_df: pd.DataFrame | None = None
-_current_filename: str | None = None
-_data_quality: dict | None = None
+_SECRET_KEY_PATH = os.path.join(UPLOAD_DIR, ".secret_key")
+if os.path.exists(_SECRET_KEY_PATH):
+    with open(_SECRET_KEY_PATH, "rb") as f:
+        app.secret_key = f.read()
+else:
+    app.secret_key = os.urandom(32)
+    with open(_SECRET_KEY_PATH, "wb") as f:
+        f.write(app.secret_key)
+
+# ---------------------------------------------------------------------------
+# Session-based in-memory storage
+# ---------------------------------------------------------------------------
+_sessions: dict[str, dict] = {}
+_sessions_lock = threading.Lock()
+_last_cleanup = 0.0
+SESSION_TTL = 3600  # 1 hour
+
+
+def _ensure_sid() -> str:
+    """Return the current session ID, creating one if needed."""
+    sid = session.get("sid")
+    if sid is None or sid not in _sessions:
+        sid = uuid.uuid4().hex[:16]
+        session["sid"] = sid
+        with _sessions_lock:
+            _sessions[sid] = {
+                "df": None,
+                "filename": None,
+                "data_quality": None,
+                "custom_thresholds": None,
+                "is_demo": False,
+                "ts": time.time(),
+            }
+    return sid
+
+
+def _touch() -> None:
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        _sessions[sid]["ts"] = time.time()
 
 
 def get_df() -> pd.DataFrame | None:
-    return _current_df
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        return _sessions[sid]["df"]
+    return None
 
+
+def get_filename() -> str | None:
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        return _sessions[sid]["filename"]
+    return None
+
+
+def get_data_quality() -> dict | None:
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        return _sessions[sid]["data_quality"]
+    return None
+
+
+def get_custom_thresholds() -> dict | None:
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        return _sessions[sid]["custom_thresholds"]
+    return None
+
+
+def get_is_demo() -> bool:
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        return _sessions[sid].get("is_demo", False)
+    return False
+
+
+def _set_session(key: str, value) -> None:
+    sid = _ensure_sid()
+    _sessions[sid][key] = value
+    _sessions[sid]["ts"] = time.time()
+
+
+@app.before_request
+def _cleanup_and_init():
+    global _last_cleanup
+    now = time.time()
+    if now - _last_cleanup > 60:
+        _last_cleanup = now
+        expired = [
+            sid for sid, data in _sessions.items()
+            if now - data["ts"] > SESSION_TTL
+        ]
+        if expired:
+            with _sessions_lock:
+                for sid in expired:
+                    _sessions.pop(sid, None)
+    _ensure_sid()
+    _touch()
+
+
+@app.context_processor
+def _inject_globals():
+    return {
+        "filename": get_filename(),
+        "is_demo": get_is_demo(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def _apply_audience_filter(df: pd.DataFrame) -> tuple[pd.DataFrame, str | None]:
-    """Filter DataFrame by audience query param if present."""
     audience = request.args.get("audience")
     if audience and "audience" in df.columns:
         filtered = df[df["audience"] == audience]
@@ -61,27 +168,27 @@ def _apply_audience_filter(df: pd.DataFrame) -> tuple[pd.DataFrame, str | None]:
     return df, None
 
 
-LAST_UPLOAD_PATH = os.path.join(UPLOAD_DIR, ".last_upload.json")
+def _last_upload_path() -> str:
+    sid = session.get("sid", "default")
+    return os.path.join(UPLOAD_DIR, f".last_upload_{sid}.json")
 
 
 def _save_last_upload(filename: str, row_count: int) -> None:
-    """Record the last successful upload for reload-on-restart."""
-    from datetime import datetime
     meta = {
         "filename": filename,
         "uploaded_at": datetime.now().isoformat(),
         "row_count": row_count,
     }
-    with open(LAST_UPLOAD_PATH, "w") as f:
+    with open(_last_upload_path(), "w") as f:
         json.dump(meta, f)
 
 
 def _check_last_upload() -> dict | None:
-    """Check if a previous upload is available for reloading."""
-    if not os.path.exists(LAST_UPLOAD_PATH):
+    path = _last_upload_path()
+    if not os.path.exists(path):
         return None
     try:
-        with open(LAST_UPLOAD_PATH) as f:
+        with open(path) as f:
             meta = json.load(f)
         filepath = os.path.join(UPLOAD_DIR, meta["filename"])
         if not os.path.exists(filepath):
@@ -90,6 +197,10 @@ def _check_last_upload() -> dict | None:
     except (json.JSONDecodeError, KeyError):
         return None
 
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @app.route("/")
 def index():
@@ -105,10 +216,9 @@ def index():
     return render_template(
         "index.html",
         summary=summary,
-        filename=_current_filename,
         last_upload=last_upload,
         audience_filter=audience_filter,
-        data_quality=_data_quality,
+        data_quality=get_data_quality(),
         reports=reports,
     )
 
@@ -124,7 +234,6 @@ def executive_summary():
     gap_data = find_gaps(df)
     recommendations = generate_recommendations(df, summary, gap_data)
 
-    # Classification system
     class_system = "LC"
     if "classification_system" in df.columns:
         lc = int((df["classification_system"] == "LC").sum())
@@ -138,25 +247,25 @@ def executive_summary():
         gaps=gap_data,
         recommendations=recommendations,
         class_system=class_system,
-        filename=_current_filename,
         now=datetime.now().strftime("%B %d, %Y"),
     )
 
 
 @app.route("/reload", methods=["POST"])
 def reload_last():
-    global _current_df, _current_filename, _data_quality
     meta = _check_last_upload()
     if meta is None:
         flash("No previous upload found.", "error")
         return redirect(url_for("upload"))
     filepath = os.path.join(UPLOAD_DIR, meta["filename"])
     try:
-        _current_df = import_catalog(filepath)
-        _current_filename = meta["filename"]
-        _data_quality = data_quality_check(_current_df)
+        df = import_catalog(filepath)
+        _set_session("df", df)
+        _set_session("filename", meta["filename"])
+        _set_session("data_quality", data_quality_check(df))
+        _set_session("is_demo", False)
         flash(
-            f"Reloaded {len(_current_df)} items from {meta['filename']}.",
+            f"Reloaded {len(df)} items from {meta['filename']}.",
             "success",
         )
     except Exception as e:
@@ -164,10 +273,28 @@ def reload_last():
     return redirect(url_for("index"))
 
 
+@app.route("/load-demo", methods=["POST"])
+def load_demo():
+    demo_path = os.path.join(os.path.dirname(__file__), "sample_data", "demo_catalog.csv")
+    if not os.path.exists(demo_path):
+        flash("Demo data not available.", "error")
+        return redirect(url_for("index"))
+    try:
+        df = import_catalog(demo_path)
+        _set_session("df", df)
+        _set_session("filename", "demo_catalog.csv")
+        _set_session("data_quality", data_quality_check(df))
+        _set_session("is_demo", True)
+        flash(f"Loaded demo dataset with {len(df)} sample items.", "success")
+    except Exception as e:
+        flash(f"Error loading demo data: {e}", "error")
+    return redirect(url_for("index"))
+
+
 @app.route("/edit-item", methods=["POST"])
 def edit_item():
-    global _current_df
-    if _current_df is None:
+    df = get_df()
+    if df is None:
         return {"ok": False, "error": "No data loaded"}, 400
     data = request.get_json()
     if not data:
@@ -177,10 +304,10 @@ def edit_item():
     value = data.get("value")
     if field != "price":
         return {"ok": False, "error": "Only price is editable"}, 400
-    if idx is None or idx < 0 or idx >= len(_current_df):
+    if idx is None or idx < 0 or idx >= len(df):
         return {"ok": False, "error": "Invalid index"}, 400
     try:
-        _current_df.at[idx, "price"] = float(value) if value is not None else pd.NA
+        df.at[idx, "price"] = float(value) if value is not None else pd.NA
         return {"ok": True}
     except (ValueError, TypeError) as e:
         return {"ok": False, "error": str(e)}, 400
@@ -188,8 +315,6 @@ def edit_item():
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
-    global _current_df, _current_filename, _data_quality
-
     if request.method == "POST":
         file = request.files.get("file")
         if not file or not file.filename:
@@ -201,20 +326,25 @@ def upload():
             flash("Unsupported file type. Please upload a CSV or Excel file.", "error")
             return redirect(url_for("upload"))
 
-        filepath = os.path.join(UPLOAD_DIR, file.filename)
+        sid = session.get("sid", "default")
+        safe_name = f"{sid}_{file.filename}"
+        filepath = os.path.join(UPLOAD_DIR, safe_name)
         file.save(filepath)
 
         try:
-            _current_df = import_catalog(filepath)
-            _current_filename = file.filename
-            _save_last_upload(file.filename, len(_current_df))
-            _data_quality = data_quality_check(_current_df)
+            df = import_catalog(filepath)
+            _set_session("df", df)
+            _set_session("filename", file.filename)
+            _set_session("is_demo", False)
+            _save_last_upload(safe_name, len(df))
+            dq = data_quality_check(df)
+            _set_session("data_quality", dq)
             flash(
-                f"Imported {len(_current_df)} items from {file.filename}.",
+                f"Imported {len(df)} items from {file.filename}.",
                 "success",
             )
-            if _data_quality["has_issues"]:
-                for issue in _data_quality["issues"]:
+            if dq["has_issues"]:
+                for issue in dq["issues"]:
                     flash(issue, "warning")
         except Exception as e:
             flash(f"Error importing file: {e}", "error")
@@ -239,13 +369,11 @@ def download_template(name):
 
 @app.route("/column-mapping", methods=["GET"])
 def column_mapping():
-    """Show what columns were detected and how they were mapped."""
     df = get_df()
     if df is None:
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
 
-    # Show which canonical columns have data
     mapping_info = []
     for col in df.columns:
         non_null = df[col].notna().sum()
@@ -258,7 +386,6 @@ def column_mapping():
     return render_template(
         "column_mapping.html",
         mapping=mapping_info,
-        filename=_current_filename,
     )
 
 
@@ -272,7 +399,6 @@ def gaps():
 
     gap_data = find_gaps(df)
 
-    # Detect dominant classification system
     class_system = "LC"
     if "classification_system" in df.columns:
         lc = int((df["classification_system"] == "LC").sum())
@@ -280,7 +406,7 @@ def gaps():
         if dw > lc:
             class_system = "Dewey"
 
-    return render_template("gaps.html", gaps=gap_data, filename=_current_filename,
+    return render_template("gaps.html", gaps=gap_data,
                            audience_filter=audience_filter, class_system=class_system)
 
 
@@ -300,7 +426,6 @@ def subjects():
         dewey=dewey,
         chart_data=json.dumps(balance),
         audience_filter=audience_filter,
-        filename=_current_filename,
     )
 
 
@@ -317,7 +442,6 @@ def age():
         "age.html",
         distribution=dist,
         chart_data=json.dumps(dist),
-        filename=_current_filename,
         audience_filter=audience_filter,
     )
 
@@ -337,7 +461,6 @@ def formats():
         formats=data,
         digital=digital,
         chart_data=json.dumps(data),
-        filename=_current_filename,
         audience_filter=audience_filter,
     )
 
@@ -354,7 +477,6 @@ def circulation():
     return render_template(
         "circulation.html",
         circ=data,
-        filename=_current_filename,
         audience_filter=audience_filter,
     )
 
@@ -378,7 +500,6 @@ def weeding():
         total_items=len(df),
         age_threshold=age_thresh,
         circ_threshold=circ_thresh,
-        filename=_current_filename,
         audience_filter=audience_filter,
     )
 
@@ -386,10 +507,6 @@ def weeding():
 # ---------------------------------------------------------------------------
 # MUSTIE / CREW weeding
 # ---------------------------------------------------------------------------
-
-# Session-scoped custom thresholds (survives across page loads)
-_custom_thresholds: dict[str, dict] | None = None
-
 
 @app.route("/mustie", methods=["GET"])
 def mustie_weeding():
@@ -399,7 +516,7 @@ def mustie_weeding():
         return redirect(url_for("upload"))
     df, audience_filter = _apply_audience_filter(df)
 
-    thresholds = _custom_thresholds or get_default_thresholds()
+    thresholds = get_custom_thresholds() or get_default_thresholds()
 
     flagged = apply_mustie(df, thresholds=thresholds)
     summary = mustie_summary(flagged)
@@ -411,15 +528,12 @@ def mustie_weeding():
         total_items=len(df),
         summary=summary,
         thresholds=thresholds,
-        filename=_current_filename,
         audience_filter=audience_filter,
     )
 
 
 @app.route("/mustie/settings", methods=["GET", "POST"])
 def mustie_settings():
-    global _custom_thresholds
-
     if request.method == "POST":
         thresholds = get_default_thresholds()
         for cls in thresholds:
@@ -434,22 +548,20 @@ def mustie_settings():
                         thresholds[cls][field] = int(request.form[key])
                     except ValueError:
                         pass
-        _custom_thresholds = thresholds
+        _set_session("custom_thresholds", thresholds)
         flash("MUSTIE thresholds updated.", "success")
         return redirect(url_for("mustie_weeding"))
 
-    thresholds = _custom_thresholds or get_default_thresholds()
+    thresholds = get_custom_thresholds() or get_default_thresholds()
     return render_template(
         "mustie_settings.html",
         thresholds=thresholds,
-        filename=_current_filename,
     )
 
 
 @app.route("/mustie/reset", methods=["POST"])
 def mustie_reset():
-    global _custom_thresholds
-    _custom_thresholds = None
+    _set_session("custom_thresholds", None)
     flash("MUSTIE thresholds reset to CREW defaults.", "success")
     return redirect(url_for("mustie_settings"))
 
@@ -462,7 +574,7 @@ def export_mustie():
         return redirect(url_for("upload"))
     df, _ = _apply_audience_filter(df)
 
-    thresholds = _custom_thresholds or get_default_thresholds()
+    thresholds = get_custom_thresholds() or get_default_thresholds()
     flagged = apply_mustie(df, thresholds=thresholds)
     return _csv_response(
         flagged.fillna("").to_dict("records"),
@@ -486,7 +598,7 @@ def dormant():
     data = dormant_items(df, dormant_years=years)
     return render_template(
         "dormant.html", data=data, dormant_years=years,
-        total_items=len(df), filename=_current_filename,
+        total_items=len(df),
         audience_filter=audience_filter,
     )
 
@@ -502,7 +614,7 @@ def duplicates():
     data = find_duplicates(df)
     return render_template(
         "duplicates.html", dupes=data,
-        total_items=len(df), filename=_current_filename,
+        total_items=len(df),
         audience_filter=audience_filter,
     )
 
@@ -517,7 +629,7 @@ def cost():
 
     data = cost_analysis(df)
     return render_template(
-        "cost.html", cost=data, filename=_current_filename,
+        "cost.html", cost=data,
         audience_filter=audience_filter,
     )
 
@@ -532,7 +644,6 @@ def freshness():
 
     data = collection_freshness(df)
 
-    # Detect dominant classification system
     class_system = "LC"
     if "classification_system" in df.columns:
         lc = int((df["classification_system"] == "LC").sum())
@@ -542,7 +653,7 @@ def freshness():
 
     return render_template(
         "freshness.html", freshness=data,
-        chart_data=json.dumps(data), filename=_current_filename,
+        chart_data=json.dumps(data),
         audience_filter=audience_filter, class_system=class_system,
     )
 
@@ -603,7 +714,6 @@ def getting_started():
     return render_template(
         "getting_started.html",
         has_data=get_df() is not None,
-        filename=_current_filename,
     )
 
 
@@ -612,7 +722,6 @@ def getting_started():
 # ---------------------------------------------------------------------------
 
 def _csv_response(rows: list[dict], filename: str) -> Response:
-    """Build a CSV download response from a list of dicts."""
     if not rows:
         return Response("No data to export.\n", mimetype="text/plain")
 
@@ -662,7 +771,6 @@ def export_circulation():
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
     data = circulation_analysis(df)
-    # Export the top items list (most useful for sharing)
     return _csv_response(data.get("top_items", []), "top_circulating_items.csv")
 
 
@@ -690,7 +798,7 @@ def export_pull_list():
     source = request.args.get("source", "weeding")
     if source == "mustie":
         from mustie import apply_mustie, get_default_thresholds
-        thresholds = _custom_thresholds if _custom_thresholds else get_default_thresholds()
+        thresholds = get_custom_thresholds() or get_default_thresholds()
         candidates = apply_mustie(df, thresholds)
     else:
         age_thresh = request.args.get("age", 15, type=int)
@@ -700,7 +808,6 @@ def export_pull_list():
     if candidates is None or len(candidates) == 0:
         return "No candidates to export.", 400
 
-    # Select pull-list columns and sort by call number
     cols = ["call_number", "title", "author"]
     if "location" in candidates.columns:
         cols.insert(1, "location")
@@ -719,7 +826,6 @@ def export_gaps():
         return redirect(url_for("upload"))
 
     gap_data = find_gaps(df)
-    # Combine all gap types into one export with a "gap_type" column
     rows = []
     for item in gap_data.get("underrepresented_subjects", []):
         rows.append({
@@ -796,7 +902,6 @@ def banned_books():
         total_items=len(df),
         audience_breakdown=audience_breakdown,
         audience_filter=audience_filter,
-        filename=_current_filename,
     )
 
 
@@ -848,7 +953,6 @@ def diversity():
         "diversity.html",
         audit=result,
         audience_filter=audience_filter,
-        filename=_current_filename,
     )
 
 
