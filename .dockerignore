@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+dist/
+build/
+*.spec
+.git/
+docs/
+uploads/
+*.png
+*.pdf
+*.pptx
