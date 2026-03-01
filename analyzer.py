@@ -88,6 +88,91 @@ def data_quality_check(df: pd.DataFrame) -> dict:
     }
 
 
+def report_availability(df: pd.DataFrame) -> list[dict]:
+    """Check which reports have enough data to be useful."""
+    reports = [
+        {
+            "name": "Collection Gaps",
+            "url": "gaps",
+            "requires": "Call Number + Publication Year",
+            "available": bool(df["call_number"].notna().any() and df["pub_year"].notna().any()),
+        },
+        {
+            "name": "Subject Balance",
+            "url": "subjects",
+            "requires": "Call Number",
+            "available": bool(df["call_number"].notna().any()),
+        },
+        {
+            "name": "Freshness",
+            "url": "freshness",
+            "requires": "Call Number + Publication Year",
+            "available": bool(df["call_number"].notna().any() and df["pub_year"].notna().any()),
+        },
+        {
+            "name": "Age Distribution",
+            "url": "age",
+            "requires": "Publication Year",
+            "available": bool(df["pub_year"].notna().any()),
+        },
+        {
+            "name": "Format Breakdown",
+            "url": "formats",
+            "requires": "Format",
+            "available": bool(df["format"].notna().any()),
+        },
+        {
+            "name": "Duplicates",
+            "url": "duplicates",
+            "requires": "ISBN or Title + Author",
+            "available": bool(df["isbn"].notna().any() or (df["title"].notna().any() and df["author"].notna().any())),
+        },
+        {
+            "name": "Cost & ROI",
+            "url": "cost",
+            "requires": "Price",
+            "available": bool(df["price"].notna().any()),
+        },
+        {
+            "name": "Usage Analysis",
+            "url": "circulation",
+            "requires": "Checkouts",
+            "available": bool(df["checkouts"].notna().any()),
+        },
+        {
+            "name": "Dormant Items",
+            "url": "dormant",
+            "requires": "Last Checkout Date",
+            "available": bool(df["last_checkout"].notna().any()),
+        },
+        {
+            "name": "Weeding (Simple)",
+            "url": "weeding",
+            "requires": "Publication Year + Checkouts",
+            "available": bool(df["pub_year"].notna().any() and df["checkouts"].notna().any()),
+        },
+        {
+            "name": "Weeding (MUSTIE)",
+            "url": "mustie_weeding",
+            "requires": "Publication Year + Checkouts",
+            "available": bool(df["pub_year"].notna().any() and df["checkouts"].notna().any()),
+        },
+        {
+            "name": "Banned/Challenged Books",
+            "url": "banned_books",
+            "requires": "Title",
+            "available": bool(df["title"].notna().any()),
+        },
+        {
+            "name": "Diversity Audit",
+            "url": "diversity",
+            "requires": "Subject",
+            "available": bool(df["subject"].notna().any()),
+        },
+    ]
+    return reports
+
+
 def generate_recommendations(df: pd.DataFrame, summary: dict, gaps: dict) -> list[dict]:
     """Generate top 3 actionable recommendations based on collection data."""
     recs = []

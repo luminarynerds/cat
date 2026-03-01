@@ -566,6 +566,43 @@ tbody tr:hover {
 .mustie-I { background: #bee3f8; color: #2a4365; }
 .mustie-E { background: #e9d8fd; color: #553c9a; }
 
+/* Report availability grid */
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+}
+.report-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--gray-200);
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+.report-link.available:hover { background: var(--gray-50); }
+.report-link.unavailable { opacity: 0.55; }
+.report-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 0.3rem;
+    flex-shrink: 0;
+}
+.report-dot.green { background: var(--green-500, #22c55e); }
+.report-dot.gray { background: var(--gray-300); }
+.report-name { font-weight: 500; }
+.report-missing {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    width: 100%;
+    padding-left: 1.25rem;
+}
+
 /* ── Responsive ─────────────────────────────────── */
 
 .hamburger {

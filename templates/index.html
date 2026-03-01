@@ -102,21 +102,23 @@
 </div>
 {% endif %}
 
-<div class="stat-grid">
     <div class="card" style="grid-column: 1 / -1;">
-        <h3>Where to Start</h3>
-        <p style="margin-bottom: 12px; color: var(--gray-600); font-size: 14px;">
-            Not sure where to begin? <strong>Collection Gaps</strong> is usually the most
-            useful report &mdash; it shows you exactly where the holes are.
+        <h3>Your Reports</h3>
+        <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 1rem;">
+            Based on your uploaded data, here is what each report can show you:
         </p>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="{{ url_for('gaps') }}" class="btn">Collection Gaps</a>
-            <a href="{{ url_for('subjects') }}" class="btn">Subject Balance</a>
-            <a href="{{ url_for('age') }}" class="btn">Age Distribution</a>
-            <a href="{{ url_for('weeding') }}" class="btn">Weeding Candidates</a>
+        <div class="report-grid">
+            {% for r in reports %}
+            <a href="{{ url_for(r.url) }}" class="report-link {{ 'available' if r.available else 'unavailable' }}">
+                <span class="report-dot {{ 'green' if r.available else 'gray' }}"></span>
+                <span class="report-name">{{ r.name }}</span>
+                {% if not r.available %}
+                <span class="report-missing">Needs: {{ r.requires }}</span>
+                {% endif %}
+            </a>
+            {% endfor %}
         </div>
     </div>
-</div>
 
 {% else %}
 

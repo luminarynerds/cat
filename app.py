@@ -16,6 +16,7 @@ from importer import import_catalog, LC_CLASS_LABELS
 from analyzer import (
     collection_summary,
     data_quality_check,
+    report_availability,
     age_distribution,
     subject_balance,
     dewey_subject_balance,
@@ -95,9 +96,11 @@ def index():
     df = get_df()
     summary = None
     audience_filter = None
+    reports = None
     if df is not None:
         df, audience_filter = _apply_audience_filter(df)
         summary = collection_summary(df)
+        reports = report_availability(df)
     last_upload = _check_last_upload() if df is None else None
     return render_template(
         "index.html",
@@ -106,6 +109,7 @@ def index():
         last_upload=last_upload,
         audience_filter=audience_filter,
         data_quality=_data_quality,
+        reports=reports,
     )
 
 
