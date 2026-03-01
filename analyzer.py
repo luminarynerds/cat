@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 
 from importer import LC_CLASS_LABELS
+from dewey_tables import DEWEY_TENS_LABELS, DEWEY_HUNDREDS_LABELS
 
 
 def collection_summary(df: pd.DataFrame) -> dict:
@@ -91,6 +92,65 @@ def subject_balance(df: pd.DataFrame) -> list[dict]:
         lambda x: LC_CLASS_LABELS.get(x, "Unknown")
     )
     return grouped.sort_values("count", ascending=False).to_dict("records")
+
+
+def dewey_subject_balance(df: pd.DataFrame) -> dict:
+    """Subject balance for Dewey-classified items at tens and hundreds level."""
+    result = {"dominant_system": "LC", "dewey_tens": [], "dewey_hundreds": {}}
+
+    if "classification_system" not in df.columns:
+        return result
+
+    lc_count = int((df["classification_system"] == "LC").sum())
+    dewey_count = int((df["classification_system"] == "Dewey").sum())
+    total = lc_count + dewey_count
+
+    if total == 0:
+        return result
+
+    if dewey_count > lc_count:
+        result["dominant_system"] = "Dewey"
+    elif dewey_count > 0 and lc_count > 0:
+        result["dominant_system"] = "Mixed"
+
+    if dewey_count == 0:
+        return result
+
+    dewey_df = df[df["dewey_tens"].notna()].copy()
+    if len(dewey_df) == 0:
+        return result
+
+    tens_grouped = (
+        dewey_df.groupby("dewey_tens")
+        .agg(count=("title", "size"), avg_checkouts=("checkouts", "mean"))
+        .reset_index()
+    )
+    tens_total = len(dewey_df)
+    tens_grouped["percentage"] = (tens_grouped["count"] / tens_total * 100).round(1)
+    tens_grouped["avg_checkouts"] = tens_grouped["avg_checkouts"].round(1)
+    tens_grouped["label"] = tens_grouped["dewey_tens"].map(
+        lambda x: DEWEY_TENS_LABELS.get(x, "Unknown")
+    )
+    result["dewey_tens"] = tens_grouped.sort_values("count", ascending=False).to_dict("records")
+
+    hundreds_df = dewey_df[dewey_df["dewey_class"].notna()].copy()
+    if len(hundreds_df) > 0:
+        for tens_code in tens_grouped["dewey_tens"]:
+            subset = hundreds_df[hundreds_df["dewey_tens"] == tens_code]
+            if len(subset) == 0:
+                continue
+            h_grouped = (
+                subset.groupby("dewey_class")
+                .agg(count=("title", "size"), avg_checkouts=("checkouts", "mean"))
+                .reset_index()
+            )
+            h_grouped["avg_checkouts"] = h_grouped["avg_checkouts"].round(1)
+            h_grouped["label"] = h_grouped["dewey_class"].map(
+                lambda x: DEWEY_HUNDREDS_LABELS.get(x, DEWEY_TENS_LABELS.get(x, "Unknown"))
+            )
+            result["dewey_hundreds"][tens_code] = h_grouped.sort_values("count", ascending=False).to_dict("records")
+
+    return result
 
 
 def find_gaps(df: pd.DataFrame) -> dict:
