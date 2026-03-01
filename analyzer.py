@@ -252,9 +252,15 @@ def weeding_candidates(df: pd.DataFrame, age_threshold: int = 15,
         & (df["checkouts"].fillna(0) <= circ_threshold)
     ].copy()
     candidates["age"] = current_year - candidates["pub_year"]
+    candidates["cost_per_circ"] = candidates.apply(
+        lambda r: round(r["price"] / r["checkouts"], 2)
+        if pd.notna(r["price"]) and r["price"] > 0 and pd.notna(r["checkouts"]) and r["checkouts"] > 0
+        else None,
+        axis=1,
+    )
     return candidates.sort_values(
         ["checkouts", "age"], ascending=[True, False]
-    )[["title", "author", "call_number", "pub_year", "age", "checkouts", "format"]]
+    )[["title", "author", "call_number", "pub_year", "age", "checkouts", "format", "price", "cost_per_circ"]]
 
 
 def dormant_items(df: pd.DataFrame, dormant_years: int = 3) -> dict:

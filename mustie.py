@@ -183,13 +183,24 @@ def apply_mustie(df: pd.DataFrame,
 
     result["mustie_flags"] = result.apply(_mustie_str, axis=1)
 
+    # Compute cost-per-circ
+    result["cost_per_circ"] = result.apply(
+        lambda r: round(r["price"] / r["checkouts"], 2)
+        if "price" in result.columns
+        and pd.notna(r.get("price")) and r.get("price", 0) > 0
+        and pd.notna(r.get("checkouts")) and r.get("checkouts", 0) > 0
+        else None,
+        axis=1,
+    )
+
     # Only return items with at least one flag
     flagged = result[result["mustie_count"] > 0].copy()
 
     # Select output columns
     output_cols = [
         "title", "author", "call_number", "pub_year", "age",
-        "checkouts", "format", "broad_class", "subject_max_age",
+        "checkouts", "price", "cost_per_circ",
+        "format", "broad_class", "subject_max_age",
         "subject_circ_floor", "subject_max_no_circ",
         "mustie_flags", "mustie_count",
         "flag_m", "flag_u", "flag_s", "flag_t", "flag_i", "flag_e",
