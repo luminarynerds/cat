@@ -36,6 +36,7 @@
 
             <div class="section-label">Special</div>
             <a href="{{ url_for('banned_books') }}" class="{% if request.endpoint == 'banned_books' %}active{% endif %}">Banned/Challenged Books</a>
+            <a href="{{ url_for('diversity') }}" class="{% if request.endpoint == 'diversity' %}active{% endif %}">Diversity Audit</a>
 
             <div class="section-label">Data</div>
             <a href="{{ url_for('column_mapping') }}" class="{% if request.endpoint == 'column_mapping' %}active{% endif %}">Column Mapping</a>
