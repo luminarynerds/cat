@@ -64,14 +64,14 @@ def get_default_thresholds() -> dict[str, dict]:
 
 def apply_mustie(df: pd.DataFrame,
                  thresholds: dict[str, dict] | None = None,
-                 circ_floor: int = 2) -> pd.DataFrame:
+                 circ_floor: int | None = None) -> pd.DataFrame:
     """Evaluate every item against MUSTIE criteria.
 
     Args:
         df: The catalog DataFrame (must have lc_class, pub_year, checkouts, etc.)
         thresholds: Per-subject age/circ thresholds (defaults to CREW guidelines)
-        circ_floor: Global minimum checkout count below which an item is
-                    considered low-circulation. Defaults to 2.
+        circ_floor: Optional global fallback for minimum checkout count.
+                    Per-subject values from thresholds take priority.
 
     Returns:
         A DataFrame of flagged items with MUSTIE columns added.
@@ -90,6 +90,19 @@ def apply_mustie(df: pd.DataFrame,
     # Look up per-subject threshold for each row
     result["subject_max_age"] = result["broad_class"].map(
         lambda c: thresholds.get(c, {}).get("max_age", 15) if pd.notna(c) else 15
+    )
+
+    # Look up per-subject circ floor (falls back to global circ_floor or 2)
+    global_circ_floor = circ_floor if circ_floor is not None else 2
+    result["subject_circ_floor"] = result["broad_class"].map(
+        lambda c: thresholds.get(c, {}).get("circ_floor", global_circ_floor)
+        if pd.notna(c) else global_circ_floor
+    )
+
+    # Look up per-subject max no-circ years
+    result["subject_max_no_circ"] = result["broad_class"].map(
+        lambda c: thresholds.get(c, {}).get("max_no_circ_years", 3)
+        if pd.notna(c) else 3
     )
 
     # --- M: Misleading ---
@@ -143,7 +156,7 @@ def apply_mustie(df: pd.DataFrame,
 
     # --- I: Irrelevant (no community interest) ---
     # Flagged when an item has very low or zero circulation.
-    result["flag_i"] = (result["circ"] <= circ_floor)
+    result["flag_i"] = (result["circ"] <= result["subject_circ_floor"])
 
     # --- E: Elsewhere ---
     # Can't be detected from catalog data. Left as False; users can
@@ -171,6 +184,7 @@ def apply_mustie(df: pd.DataFrame,
     output_cols = [
         "title", "author", "call_number", "pub_year", "age",
         "checkouts", "format", "broad_class", "subject_max_age",
+        "subject_circ_floor", "subject_max_no_circ",
         "mustie_flags", "mustie_count",
         "flag_m", "flag_u", "flag_s", "flag_t", "flag_i", "flag_e",
     ]
