@@ -13,6 +13,7 @@ from flask import (
     Flask, render_template, request, redirect, url_for, flash, Response,
     send_file, session,
 )
+from werkzeug.utils import secure_filename
 import pandas as pd
 
 from importer import import_catalog, LC_CLASS_LABELS
@@ -39,6 +40,12 @@ from analyzer import (
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB upload limit
+
+@app.errorhandler(413)
+def file_too_large(e):
+    flash("File too large. Maximum upload size is 50 MB.", "error")
+    return redirect(url_for("upload"))
 
 # ---------------------------------------------------------------------------
 # Stable secret key — persists across restarts
@@ -275,11 +282,16 @@ def upload():
             flash("Unsupported file type. Please upload a CSV or Excel file.", "error")
             return redirect(url_for("upload"))
 
-        filepath = os.path.join(UPLOAD_DIR, file.filename)
+        safe_name = secure_filename(file.filename) or "upload.csv"
+        filepath = os.path.join(UPLOAD_DIR, safe_name)
         file.save(filepath)
 
         try:
             df = import_catalog(filepath)
+            MAX_ROWS = 500_000
+            if len(df) > MAX_ROWS:
+                flash(f"File exceeds {MAX_ROWS:,} row limit ({len(df):,} rows). Please reduce the file size.", "error")
+                return redirect(url_for("upload"))
             _set_session("df", df)
             _set_session("filename", file.filename)
             _set_session("is_demo", False)
