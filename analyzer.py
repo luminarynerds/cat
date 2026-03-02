@@ -787,9 +787,12 @@ def _load_banned_list() -> list[dict]:
         return json.load(f)
 
 
-def _load_custom_banned_list() -> list[dict]:
+def _load_custom_banned_list(custom_path: str | None = None) -> list[dict]:
     """Load user-uploaded custom banned list if it exists."""
-    path = os.path.join(os.path.dirname(__file__), "uploads", "banned_books_custom.csv")
+    if custom_path:
+        path = custom_path
+    else:
+        path = os.path.join(os.path.dirname(__file__), "uploads", "banned_books_custom.csv")
     if not os.path.exists(path):
         return []
     custom_df = pd.read_csv(path)
@@ -802,9 +805,9 @@ def _load_custom_banned_list() -> list[dict]:
     return entries
 
 
-def flag_banned_books(df: pd.DataFrame) -> pd.DataFrame:
+def flag_banned_books(df: pd.DataFrame, custom_banned_path: str | None = None) -> pd.DataFrame:
     """Match catalog items against banned/challenged book lists."""
-    banned = _load_banned_list() + _load_custom_banned_list()
+    banned = _load_banned_list() + _load_custom_banned_list(custom_banned_path)
     if not banned:
         return pd.DataFrame()
 

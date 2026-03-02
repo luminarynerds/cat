@@ -11,9 +11,10 @@ from datetime import datetime
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, Response,
-    send_file, session,
+    send_file, session, send_from_directory,
 )
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect
 import pandas as pd
 
 from importer import import_catalog, LC_CLASS_LABELS
@@ -41,11 +42,41 @@ from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB upload limit
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+csrf = CSRFProtect(app)
+
+
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+
+@app.route('/robots.txt')
+def robots():
+    return 'User-agent: *\nAllow: /\n', 200, {'Content-Type': 'text/plain'}
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.svg'), 200, {'Content-Type': 'image/svg+xml'}
+
 
 @app.errorhandler(413)
 def file_too_large(e):
     flash("File too large. Maximum upload size is 50 MB.", "error")
     return redirect(url_for("upload"))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 
 # ---------------------------------------------------------------------------
 # Stable secret key — persists across restarts
@@ -123,6 +154,18 @@ def get_custom_thresholds() -> dict | None:
     return None
 
 
+def _get_banned_books_path() -> str | None:
+    """Return path to session-scoped custom banned books file, or None."""
+    sid = session.get("sid")
+    if sid and sid in _sessions:
+        fname = _sessions[sid].get("banned_books_file")
+        if fname:
+            path = os.path.join(UPLOAD_DIR, fname)
+            if os.path.exists(path):
+                return path
+    return None
+
+
 def get_is_demo() -> bool:
     sid = session.get("sid")
     if sid and sid in _sessions:
@@ -149,7 +192,12 @@ def _cleanup_and_init():
         if expired:
             with _sessions_lock:
                 for sid in expired:
-                    _sessions.pop(sid, None)
+                    data = _sessions.pop(sid, None)
+                    if data and data.get("banned_books_file"):
+                        try:
+                            os.remove(os.path.join(UPLOAD_DIR, data["banned_books_file"]))
+                        except OSError:
+                            pass
     _ensure_sid()
     _touch()
 
@@ -224,7 +272,7 @@ def executive_summary():
         gaps=gap_data,
         recommendations=recommendations,
         class_system=class_system,
-        now=datetime.now().strftime("%B %d, %Y"),
+        report_date=datetime.now().strftime("%B %d, %Y"),
     )
 
 
@@ -247,6 +295,7 @@ def load_demo():
     return redirect(url_for("index"))
 
 
+@csrf.exempt
 @app.route("/edit-item", methods=["POST"])
 def edit_item():
     df = get_df()
@@ -260,13 +309,34 @@ def edit_item():
     value = data.get("value")
     if field != "price":
         return {"ok": False, "error": "Only price is editable"}, 400
-    if idx is None or idx < 0 or idx >= len(df):
-        return {"ok": False, "error": "Invalid index"}, 400
+
+    # Validate index is an integer
     try:
-        df.at[idx, "price"] = float(value) if value is not None else pd.NA
-        return {"ok": True}
-    except (ValueError, TypeError) as e:
-        return {"ok": False, "error": str(e)}, 400
+        idx = int(idx)
+    except (ValueError, TypeError):
+        return {"ok": False, "error": "Invalid index: must be an integer"}, 400
+
+    if idx < 0 or idx >= len(df):
+        return {"ok": False, "error": "Invalid index"}, 400
+
+    # Validate price is a finite positive number
+    if value is not None:
+        try:
+            price = float(value)
+            # Check for NaN, Infinity, and out-of-range values
+            if not (-1e10 < price < 1e10) or price != price:  # NaN check: NaN != NaN
+                return {"ok": False, "error": "Price must be a finite number"}, 400
+            if price < 0:
+                return {"ok": False, "error": "Price must be non-negative"}, 400
+        except (ValueError, TypeError):
+            # Truncate error message to prevent reflection attacks
+            error_msg = str(type(value).__name__) if value is not None else "None"
+            return {"ok": False, "error": f"Invalid price: {error_msg}"}, 400
+        df.at[idx, "price"] = price
+    else:
+        df.at[idx, "price"] = pd.NA
+
+    return {"ok": True}
 
 
 @app.route("/upload", methods=["GET", "POST"])
@@ -506,7 +576,8 @@ def mustie_settings():
                 key = f"{form_prefix}_{cls}"
                 if key in request.form:
                     try:
-                        thresholds[cls][field] = int(request.form[key])
+                        value = int(request.form[key])
+                        thresholds[cls][field] = max(0, value)
                     except ValueError:
                         pass
         _set_session("custom_thresholds", thresholds)
@@ -668,6 +739,11 @@ def export_freshness():
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
     return _csv_response(collection_freshness(df), "collection_freshness.csv")
+
+
+@app.route('/help')
+def help_redirect():
+    return redirect(url_for('getting_started'))
 
 
 @app.route("/getting-started")
@@ -852,7 +928,8 @@ def banned_books():
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
     df, audience_filter = _apply_audience_filter(df)
-    matches = flag_banned_books(df)
+    custom_file = _get_banned_books_path()
+    matches = flag_banned_books(df, custom_banned_path=custom_file)
     audience_breakdown = {}
     if len(matches) > 0 and "audience" in matches.columns:
         audience_breakdown = matches["audience"].value_counts().to_dict()
@@ -872,9 +949,13 @@ def upload_banned_list():
     if not file or not file.filename:
         flash("Please select a file.", "error")
         return redirect(url_for("banned_books"))
-    filepath = os.path.join(UPLOAD_DIR, "banned_books_custom.csv")
+    sid = _ensure_sid()
+    safe_name = secure_filename(file.filename) or "banned_books.csv"
+    scoped_name = f"banned_books_{sid}.csv"
+    filepath = os.path.join(UPLOAD_DIR, scoped_name)
     file.save(filepath)
-    flash(f"Custom banned books list uploaded from {file.filename}.", "success")
+    _set_session("banned_books_file", scoped_name)
+    flash(f"Custom banned books list uploaded from {safe_name}.", "success")
     return redirect(url_for("banned_books"))
 
 
@@ -885,7 +966,8 @@ def export_banned_books():
         flash("Please upload a file first.", "error")
         return redirect(url_for("upload"))
     df, _ = _apply_audience_filter(df)
-    matches = flag_banned_books(df)
+    custom_file = _get_banned_books_path()
+    matches = flag_banned_books(df, custom_banned_path=custom_file)
     if len(matches) == 0:
         flash("No banned book matches to export.", "error")
         return redirect(url_for("banned_books"))
@@ -930,8 +1012,14 @@ def export_diversity():
         for item in cat.get("items", []):
             rows.append({**item, "diversity_category": cat["name"]})
     if not rows:
-        flash("No diversity data to export.", "error")
-        return redirect(url_for("diversity"))
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=["diversity_category", "title", "author"])
+        writer.writeheader()
+        return Response(
+            buf.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=diversity_audit.csv"},
+        )
     return _csv_response(rows, "diversity_audit.csv")
 
 

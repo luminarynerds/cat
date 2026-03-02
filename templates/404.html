@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Page Not Found</h2>
+    <p>We couldn't find what you're looking for.</p>
+</div>
+
+<div class="alert alert-warning" style="margin: 20px 0; padding: 20px; background-color: var(--amber-50, #fffbeb); border-left: 4px solid var(--amber-500, #f59e0b); border-radius: 4px;">
+    <strong>404 Error</strong><br>
+    The page you requested doesn't exist.
+</div>
+
+<div class="card">
+    <h3>What happened?</h3>
+    <p>Either the URL was mistyped, or the page has moved. Don't worry — your data is safe.</p>
+</div>
+
+<div class="card">
+    <h3>Where to go next</h3>
+    <ul style="margin: 0; padding: 0 0 0 20px;">
+        <li><a href="{{ url_for('index') }}">Return to Dashboard</a></li>
+        <li><a href="{{ url_for('upload') }}">Upload Data</a></li>
+        <li><a href="{{ url_for('getting_started') }}">Getting Started Guide</a></li>
+    </ul>
+</div>
+{% endblock %}

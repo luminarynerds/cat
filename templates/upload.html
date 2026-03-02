@@ -48,6 +48,7 @@
 <div class="card">
     <h3>Upload File</h3>
     <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="upload-area">
             <p><strong>Select your catalog export file</strong></p>
             <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">

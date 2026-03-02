@@ -84,6 +84,7 @@
         column (and optionally <strong>Author</strong>). It will be merged with the built-in list.
     </p>
     <form method="POST" action="{{ url_for('upload_banned_list') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="file" name="file" accept=".csv">
         <button type="submit" class="btn btn-sm" style="margin-left: 8px;">Upload</button>
     </form>

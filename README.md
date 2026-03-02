@@ -1,69 +1,80 @@
-# Library Collection Analyzer
+# Collection Analyzer Tool (CAT)
 
-A web application for analyzing library catalog data without needing a direct
-connection to your ILS. Upload a CSV or Excel export and get actionable insights
-about collection gaps, subject balance, aging materials, circulation patterns,
-weeding candidates, and more.
+A free, open-source collection analysis tool for librarians. Upload a CSV or Excel export from your ILS and get instant reports on weeding candidates, collection gaps, age analysis, circulation stats, MUSTIE/CREW scoring, diversity audits, and more.
 
-## Quick Start
+**Live at [librarians.cloud](https://librarians.cloud)**
 
-```bash
-pip install -r requirements.txt
-python3 app.py
-```
+## What it does
 
-Then open **http://127.0.0.1:5000** in your browser.
+- **Dashboard** — total items, unique titles/authors, median age, circulation overview
+- **Board Summary** — one-page executive summary ready to print for your board
+- **Collection Gaps** — subjects that are underrepresented based on LC or Dewey classification
+- **Subject Balance** — distribution of items across subject areas
+- **Freshness & Age** — how old your collection is, broken down by subject
+- **Formats** — physical vs. digital, format breakdown
+- **Duplicates** — items with multiple copies that may be candidates for deselection
+- **Cost & ROI** — cost per circulation, replacement value estimates
+- **Circulation / Usage** — checkout distribution, high and low performers
+- **Dormant Items** — items with no checkouts in X years
+- **Weeding (Simple)** — basic age + circulation weeding candidates
+- **Weeding (MUSTIE/CREW)** — full MUSTIE scoring with customizable per-subject thresholds
+- **Banned/Challenged Books** — matches your collection against ALA challenged book lists
+- **Diversity Audit** — representation analysis across subject areas
 
-## Features
+Every report can be exported to CSV. The MUSTIE thresholds are editable per subject area. There's a built-in demo mode with sample data so you can try it without uploading anything.
 
-- **Collection gaps** -- underrepresented subjects, areas lacking recent titles,
-  aging sections that need updating
-- **Subject balance** -- breakdown across LC or Dewey classification areas with
-  circulation stats per subject
-- **Age distribution** -- collection by publication decade, areas dominated by
-  outdated materials
-- **Format breakdown** -- books, DVDs, audiobooks, digital items, etc. with usage
-  stats for each format
-- **Circulation analysis** -- top-circulating items, usage by format, dormant items
-- **Weeding candidates** -- old + rarely circulated items using CREW/MUSTIE criteria
-  with adjustable thresholds and per-subject overrides
-- **MUSTIE analysis** -- flag items as Misleading, Ugly, Superseded, Trivial,
-  Irrelevant, or Elsewhere-available
-- **Duplicate detection** -- find duplicate titles and editions in your collection
-- **Banned books check** -- flag items appearing on common challenged-books lists
-- **Board summary** -- one-page executive summary with recommendations, designed
-  for sharing with administrators
-- **Flag & pull lists** -- checkbox items for review and download sorted pull lists
-- **Audience segmentation** -- separate analysis for juvenile, YA, and adult materials
-- **Digital format support** -- identifies and segments electronic resources
+## Quick start
 
-## Data Import
-
-The tool recognizes common ILS column names from Sierra, Polaris, Koha, Evergreen,
-and other systems. It handles both LC and Dewey call numbers automatically.
-
-Your file doesn't need all columns -- the analyzer adapts its reports based on
-whatever data is available.
-
-A sample CSV with 500 records is included at `sample_data/sample_catalog.csv`.
-
-## Running with Docker
+### With Docker (recommended)
 
 ```bash
 docker build -t cat-app .
-docker run -p 5000:5000 cat-app
+docker run -d -p 5000:5000 --name cat-app cat-app
 ```
 
-## Standalone Executable (macOS)
+Then open `http://localhost:5000`.
+
+### Without Docker
 
 ```bash
-python3 build.py
+pip install -r requirements.txt gunicorn
+gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 120 app:app
 ```
 
-Creates a distributable app in `dist/CollectionAnalyzer/` that runs without
-Python installed.
+## Your data stays private
 
-## Requirements
+- Data is analyzed in memory only — nothing is written to disk or stored permanently
+- Uploaded files are deleted immediately after parsing
+- Each user gets an isolated session
+- No accounts, no tracking, no analytics
 
-- Python 3.10+
-- Flask, pandas, openpyxl (installed via requirements.txt)
+## What file do I need?
+
+Export a CSV or Excel file from your ILS (Sierra, Polaris, Koha, Evergreen, etc.). The tool auto-detects column names. At minimum you need **Title**, **Call Number**, and **Publication Year**. For circulation reports, add a **Checkouts** column.
+
+See the [upload page](https://librarians.cloud/upload) for the full list of recognized column names and downloadable templates.
+
+## Tech stack
+
+- Python 3.12 / Flask
+- pandas for data analysis
+- Gunicorn (1 worker, 4 threads)
+- Vanilla HTML/CSS/JS (no build step, no frameworks)
+- Docker for deployment
+
+## Accessibility
+
+- Dark mode (auto-detects OS preference, manual toggle in sidebar)
+- Skip-to-content link for keyboard navigation
+- ARIA labels on navigation and landmarks
+- Responsive down to mobile
+- Reduced motion support
+- Print-friendly stylesheets
+
+## License
+
+[MIT](LICENSE)
+
+---
+
+Built with [Claude Code](https://claude.ai/code) | Inspired by [r/librarians](https://www.reddit.com/r/librarians/comments/1rgdjzc/software_recommendation_for_collection_development/)
